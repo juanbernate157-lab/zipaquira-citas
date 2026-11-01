@@ -1950,7 +1950,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                       smtp_port: 465,
                       smtp_secure: 1,
                       smtp_user: settings.admin_notification_email || settings.contact_email || 'juanbernate157@gmail.com',
-                      smtp_from: `Zipaquirá Enterprise <${settings.admin_notification_email || settings.contact_email || 'juanbernate157@gmail.com'}>`,
+                      smtp_from: `RUFO Precise Detailing <${settings.admin_notification_email || settings.contact_email || 'juanbernate157@gmail.com'}>`,
                       smtp_enabled: 1,
                     });
                   }}
