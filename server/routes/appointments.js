@@ -54,10 +54,8 @@ function getBaseUrl(req) {
     return `${protocol}://${host}`;
   }
 
-  // When testing locally, use LAN IP so mobile phones connected to Wi-Fi can open the link!
-  const lanIp = getLanIp();
-  const port = process.env.PORT || 5000;
-  return `http://${lanIp}:${port}`;
+  // Active Global Cloudflare URL that works on any phone worldwide
+  return 'https://morning-groups-sydney-pays.trycloudflare.com';
 }
 
 // GET available slots for a given date and service duration

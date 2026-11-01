@@ -24,22 +24,28 @@ app.use('/api/appointments', appointmentsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/emails', emailsRouter);
 
-// Network IP helper for mobile scanning
+// Network IP & Global Internet URL helper for mobile scanning
+const GLOBAL_PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'https://morning-groups-sydney-pays.trycloudflare.com';
+
 app.get('/api/network-ip', (req, res) => {
   const nets = os.networkInterfaces();
   let lanIp = 'localhost';
   for (const name of Object.keys(nets)) {
     for (const net of nets[name]) {
-      if (net.family === 'IPv4' && !net.internal) {
+      // Pick Wi-Fi or Ethernet IPv4
+      if (net.family === 'IPv4' && !net.internal && !net.address.startsWith('169.254')) {
         lanIp = net.address;
-        break;
+        if (name.toLowerCase().includes('wi-fi') || name.toLowerCase().includes('wireless')) {
+          break;
+        }
       }
     }
   }
   res.json({
     ip: lanIp,
     port: PORT,
-    mobileUrl: `http://${lanIp}:${PORT}/citas`,
+    globalUrl: `${GLOBAL_PUBLIC_URL}/citas`,
+    mobileUrl: `${GLOBAL_PUBLIC_URL}/citas`,
     localUrl: `http://localhost:${PORT}/citas`,
   });
 });

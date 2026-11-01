@@ -675,13 +675,14 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
 
             {/* Quick Share Link & QR Banner (Matching user image #1) */}
             {(() => {
+              const globalTunnelUrl = 'https://morning-groups-sydney-pays.trycloudflare.com/citas';
               const isCloud = typeof window !== 'undefined' && 
                 window.location.hostname !== 'localhost' && 
                 window.location.hostname !== '127.0.0.1' && 
                 !window.location.hostname.startsWith('192.168.') && 
                 !window.location.hostname.startsWith('10.');
-              const bookingUrl = isCloud ? `${window.location.origin}/citas` : `http://${lanIp}:5000/citas`;
-              const displayUrl = isCloud ? `${window.location.host}/citas` : `${lanIp}:5000/citas`;
+              const bookingUrl = isCloud ? `${window.location.origin}/citas` : globalTunnelUrl;
+              const displayUrl = isCloud ? `${window.location.host}/citas` : 'morning-groups-sydney-pays.trycloudflare.com/citas';
               
               return (
                 <div className="bg-gradient-to-r from-blue-950 via-[#0a122e] to-black rounded-3xl p-6 text-white shadow-2xl border border-blue-500/30 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -701,17 +702,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                         <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 border border-blue-500/40">
                           {displayUrl}
                         </span>
-                        {isCloud && (
-                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                            Nube 24/7 Global
-                          </span>
-                        )}
+                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          Global 4G/5G Activo
+                        </span>
                       </div>
                       <p className="text-xs text-gray-300 max-w-xl">
-                        {isCloud 
-                          ? 'Enlace y QR globales activos en la nube 24/7: cualquier persona desde cualquier celular (con datos 4G/5G o Wi-Fi) puede agendar citas.' 
-                          : 'Escanea este código con tu celular (en el mismo Wi-Fi) o compártelo para que tus clientes agenden directamente.'}
+                        Enlace y QR globales activos: cualquier persona desde cualquier celular en el mundo (con datos 4G/5G o cualquier Wi-Fi) puede agendar citas.
                       </p>
                     </div>
                   </div>

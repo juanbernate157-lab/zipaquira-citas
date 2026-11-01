@@ -4,24 +4,24 @@ import { QRCodeSVG } from 'qrcode.react';
 
 export default function ShareQRModal({ settings, onClose }) {
   const [copied, setCopied] = useState(false);
-  const [networkIp, setNetworkIp] = useState('192.168.1.40');
+  const [globalUrl, setGlobalUrl] = useState('https://morning-groups-sydney-pays.trycloudflare.com/citas');
   const [customUrl, setCustomUrl] = useState('');
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const qrRef = useRef(null);
 
-  // Fetch local Wi-Fi IP from backend
+  // Fetch public global URL from backend
   useEffect(() => {
     fetch('/api/network-ip')
       .then((res) => res.json())
       .then((data) => {
-        if (data.ip && data.ip !== 'localhost' && data.ip !== '127.0.0.1') {
-          setNetworkIp(data.ip);
+        if (data.globalUrl) {
+          setGlobalUrl(data.globalUrl);
         }
       })
       .catch(() => {});
   }, []);
 
-  // Auto-detect public cloud domain or local Wi-Fi IP
+  // Auto-detect public cloud domain or Cloudflare tunnel URL
   const isCloudHosted = typeof window !== 'undefined' && 
     window.location.hostname !== 'localhost' && 
     window.location.hostname !== '127.0.0.1' &&
@@ -30,7 +30,7 @@ export default function ShareQRModal({ settings, onClose }) {
 
   const defaultUrl = isCloudHosted
     ? `${window.location.origin}/citas`
-    : `http://${networkIp}:5000/citas`;
+    : globalUrl;
 
   const activeUrl = customUrl.trim() || defaultUrl;
 
@@ -98,12 +98,15 @@ export default function ShareQRModal({ settings, onClose }) {
         {/* Body */}
         <div className="p-6 text-center space-y-4">
           
-          {/* Helpful Wi-Fi scan notice */}
-          <div className="p-3 bg-blue-950/70 border border-blue-500/30 rounded-2xl text-[11px] text-blue-200 text-left flex items-start gap-2">
-            <Info className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+          {/* Helpful Global Internet Scan Notice */}
+          <div className="p-3 bg-gradient-to-r from-emerald-950/60 via-blue-950/70 to-blue-900/60 border border-emerald-500/40 rounded-2xl text-[11px] text-emerald-200 text-left flex items-start gap-2.5">
+            <Globe className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5 animate-pulse" />
             <div>
-              <span className="font-bold text-white block">¿Por qué este enlace?</span>
-              Los celulares no pueden abrir "localhost" porque localhost apunta al mismo celular. Este QR usa la IP de tu computador (<strong className="text-cyan-300">{networkIp}:5000</strong>) para que tu teléfono abra la página al instante en el mismo Wi-Fi.
+              <span className="font-extrabold text-white flex items-center gap-1.5">
+                <span>Enlace Global de Internet Activo (4G / 5G / Wi-Fi)</span>
+                <span className="bg-emerald-500 text-black text-[9px] font-black px-1.5 py-0.2 rounded-full">EN LÍNEA</span>
+              </span>
+              Este código QR y enlace funcionan en <strong className="text-white">cualquier celular del mundo</strong>, con datos móviles o cualquier red Wi-Fi.
             </div>
           </div>
 
