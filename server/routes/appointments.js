@@ -386,10 +386,10 @@ router.post('/', async (req, res) => {
     const settings = getSettings();
     const googleCalendarUrl = createGoogleCalendarUrl(newAppointment, settings);
 
-    // Send emails in background (confirmation to client & notification to admin)
-    Promise.all([
-      sendClientBookingConfirmation(newAppointment, baseUrl),
+    // Send emails in background (Admin notification first, then client confirmation)
+    Promise.allSettled([
       sendAdminNewBookingNotification(newAppointment, baseUrl),
+      sendClientBookingConfirmation(newAppointment, baseUrl),
     ]).catch(err => console.error('Error enviando correos de nueva cita:', err));
 
     res.status(201).json({
