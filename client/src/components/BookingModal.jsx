@@ -89,6 +89,18 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
       setIcsDownloadUrl(data.ics_url || `/api/appointments/${data.appointment.code}/ics`);
       setStep(3); // Success step
 
+      // Automatically open Google Calendar in a new tab to save with 30m reminder
+      if (data.google_calendar_url) {
+        try {
+          const calWindow = window.open(data.google_calendar_url, '_blank', 'noopener,noreferrer');
+          if (!calWindow || calWindow.closed || typeof calWindow.closed === 'undefined') {
+            console.log('Popup bloqueado por navegador, el botón manual está visible.');
+          }
+        } catch (e) {
+          console.log('Error abriendo Google Calendar automáticamente:', e);
+        }
+      }
+
       // Automatically trigger calendar invite download with 30-min reminder
       try {
         const downloadLink = document.createElement('a');
@@ -470,15 +482,18 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
               </div>
 
               {/* Calendar Automation Card with 30m Reminder */}
-              <div className="bg-blue-50/80 border-2 border-blue-300 rounded-2xl p-4 text-left space-y-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md">
-                    <Calendar className="w-4 h-4" />
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-4 text-left space-y-3 shadow-md">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md animate-pulse">
+                    <Calendar className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-black text-blue-950">Recordatorio en tu Calendario</h4>
-                    <p className="text-[11px] text-blue-700 font-bold">
-                      ⏰ Alarma automática configurada 30 minutos antes
+                    <h4 className="text-sm font-black text-blue-950 flex items-center gap-1.5">
+                      <span>Recordatorio Automático en Google Calendar</span>
+                      <span className="text-[10px] bg-emerald-600 text-white font-black px-2 py-0.5 rounded-full">Activo</span>
+                    </h4>
+                    <p className="text-[11px] text-blue-800 font-bold">
+                      ⏰ Alarma pre-configurada para sonar <strong>30 minutos antes</strong> de tu cita.
                     </p>
                   </div>
                 </div>
@@ -488,10 +503,10 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                     href={googleCalUrl || `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Cita: ${confirmedBooking.service_name} - ${settings?.business_name}`)}&dates=${confirmedBooking.appointment_date.replace(/-/g, '')}T${confirmedBooking.appointment_time.replace(/:/g, '')}00/${confirmedBooking.appointment_date.replace(/-/g, '')}T${confirmedBooking.appointment_time.replace(/:/g, '')}00&details=${encodeURIComponent(`Cita para ${confirmedBooking.service_name}.\nCódigo: ${confirmedBooking.code}\nTeléfono: ${confirmedBooking.client_phone}\n\n* Recordatorio 30m antes.`)}&location=${encodeURIComponent(settings?.address || 'Zipaquirá')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition text-center"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 transition text-center cursor-pointer hover:scale-[1.02] active:scale-95"
                   >
                     <Calendar className="w-4 h-4" />
-                    <span>Guardar en Google Calendar</span>
+                    <span>Abrir y Guardar en Google Calendar</span>
                   </a>
 
                   <a
@@ -499,7 +514,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                     download={`cita-${confirmedBooking.code}.ics`}
                     className="py-3 px-4 rounded-xl border-2 border-blue-400 bg-white hover:bg-blue-50 text-blue-900 font-black text-xs flex items-center justify-center gap-1.5 transition text-center"
                   >
-                    <span>Descargar .ICS (Celular)</span>
+                    <span>Descargar .ICS (Apple/Android)</span>
                   </a>
                 </div>
               </div>
