@@ -9,6 +9,7 @@ const servicesRouter = require('./routes/services');
 const appointmentsRouter = require('./routes/appointments');
 const settingsRouter = require('./routes/settings');
 const emailsRouter = require('./routes/emails');
+const schedulesRouter = require('./routes/schedules');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -23,6 +24,7 @@ app.use('/api/services', servicesRouter);
 app.use('/api/appointments', appointmentsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/api/emails', emailsRouter);
+app.use('/api/schedules', schedulesRouter);
 
 // Network IP & Global Internet URL helper for mobile scanning
 const GLOBAL_PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'https://morning-groups-sydney-pays.trycloudflare.com';

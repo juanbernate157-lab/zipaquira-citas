@@ -58,16 +58,28 @@ function getBaseUrl(req) {
   return 'https://morning-groups-sydney-pays.trycloudflare.com';
 }
 
-// Horarios de atención exclusivos solicitados por el cliente:
-// Mañana: 08:00 AM y 09:00 AM
-// Tarde: 02:00 PM (14:00) y 03:00 PM (15:00)
-const RUFO_ALLOWED_SLOTS = [
-  { time: '08:00', label: '08:00 AM', period: 'morning', periodLabel: 'Mañana' },
-  { time: '09:00', label: '09:00 AM', period: 'morning', periodLabel: 'Mañana' },
-  { time: '14:00', label: '02:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
-  { time: '15:00', label: '03:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
-];
-const RUFO_ALLOWED_TIMES = RUFO_ALLOWED_SLOTS.map(s => s.time);
+// Función para obtener los turnos maestros configurados por el administrador
+function getMasterSlots() {
+  try {
+    const rows = db.prepare('SELECT * FROM schedule_slots WHERE is_active = 1 ORDER BY time_slot ASC').all();
+    if (rows && rows.length > 0) {
+      return rows.map(r => ({
+        time: r.time_slot,
+        label: r.label,
+        period: r.period,
+        periodLabel: r.period_label,
+      }));
+    }
+  } catch (err) {
+    console.error('Error cargando turnos maestros de la BD:', err);
+  }
+  return [
+    { time: '08:00', label: '08:00 AM', period: 'morning', periodLabel: 'Mañana' },
+    { time: '09:00', label: '09:00 AM', period: 'morning', periodLabel: 'Mañana' },
+    { time: '14:00', label: '02:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
+    { time: '15:00', label: '03:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
+  ];
+}
 
 // GET available slots for a given date and service duration
 router.get('/available-slots', (req, res) => {
@@ -80,7 +92,7 @@ router.get('/available-slots', (req, res) => {
     const settings = getSettings();
     const serviceDuration = Number(duration) || 60;
 
-    // Check working days
+    // 1. Check working days
     let workingDays = [1, 2, 3, 4, 5, 6];
     try {
       if (settings.working_days) {
@@ -101,7 +113,24 @@ router.get('/available-slots', (req, res) => {
       });
     }
 
-    // Get existing bookings for this date that are not cancelled
+    // 2. Check if the administrator cancelled the whole day
+    const wholeDayBlock = db.prepare('SELECT reason FROM blocked_slots WHERE block_date = ? AND time_slot IS NULL').get(date);
+    if (wholeDayBlock) {
+      return res.json({
+        available: false,
+        message: `Atención cerrada para esta fecha por el administrador: ${wholeDayBlock.reason}`,
+        slots: []
+      });
+    }
+
+    // 3. Get master active slots configured by admin
+    const masterSlots = getMasterSlots();
+
+    // 4. Get specific blocked / cancelled slots for this date
+    const blockedRows = db.prepare('SELECT time_slot, reason FROM blocked_slots WHERE block_date = ? AND time_slot IS NOT NULL').all(date);
+    const blockedMap = new Map(blockedRows.map(b => [b.time_slot, b.reason]));
+
+    // 5. Get existing bookings for this date that are not cancelled
     const existing = db.prepare(`
       SELECT appointment_time, service_duration 
       FROM appointments 
@@ -113,10 +142,14 @@ router.get('/available-slots', (req, res) => {
     const isToday = now.toISOString().slice(0, 10) === date;
     const currentMinutesNow = now.getHours() * 60 + now.getMinutes();
 
-    for (const slotDef of RUFO_ALLOWED_SLOTS) {
+    for (const slotDef of masterSlots) {
       const timeStr = slotDef.time;
       const [h, min] = timeStr.split(':').map(Number);
       const m = h * 60 + min;
+
+      // Check if blocked by admin
+      const isBlocked = blockedMap.has(timeStr);
+      const blockReason = blockedMap.get(timeStr) || '';
 
       // Check if slot has already passed today (15 min buffer)
       const isPast = isToday && m <= (currentMinutesNow + 15);
@@ -142,9 +175,11 @@ router.get('/available-slots', (req, res) => {
         label: slotDef.label,
         period: slotDef.period,
         periodLabel: slotDef.periodLabel,
-        available: !isPast && !isBooked,
+        available: !isPast && !isBooked && !isBlocked,
         isPast,
         isBooked,
+        isBlocked,
+        blockReason,
       });
     }
 
@@ -257,10 +292,27 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'El servicio seleccionado no existe o no está disponible' });
     }
 
-    // Validar que el horario sea estrictamente uno de los autorizados por RUFO Precise Detailing
-    if (!RUFO_ALLOWED_TIMES.includes(appointment_time)) {
+    // 1. Verificar si el administrador bloqueó/canceló la fecha completa
+    const wholeDayBlock = db.prepare('SELECT reason FROM blocked_slots WHERE block_date = ? AND time_slot IS NULL').get(appointment_date);
+    if (wholeDayBlock) {
       return res.status(400).json({
-        error: 'Horario no permitido. RUFO Precise Detailing atiende exclusivamente a las 8:00 AM, 9:00 AM, 2:00 PM y 3:00 PM.'
+        error: `Atención cerrada para esta fecha por el administrador: ${wholeDayBlock.reason}`
+      });
+    }
+
+    // 2. Verificar si el turno específico fue cancelado por el administrador
+    const slotBlock = db.prepare('SELECT reason FROM blocked_slots WHERE block_date = ? AND time_slot = ?').get(appointment_date, appointment_time);
+    if (slotBlock) {
+      return res.status(400).json({
+        error: `Este horario fue cancelado por el administrador para esta fecha: ${slotBlock.reason}`
+      });
+    }
+
+    // 3. Validar que el horario esté activo en los turnos configurados en el sistema
+    const activeSlot = db.prepare('SELECT id FROM schedule_slots WHERE time_slot = ? AND is_active = 1').get(appointment_time);
+    if (!activeSlot) {
+      return res.status(400).json({
+        error: 'Horario no permitido o inactivo en el sistema. Consulta los turnos disponibles actualizados.'
       });
     }
 
@@ -365,10 +417,27 @@ router.put('/:code/reschedule', async (req, res) => {
       return res.status(400).json({ error: 'Esta cita fue cancelada previamente. Debes agendar una nueva cita.' });
     }
 
-    // Validar que el nuevo horario sea estrictamente uno de los autorizados por RUFO Precise Detailing
-    if (!RUFO_ALLOWED_TIMES.includes(new_time)) {
+    // 1. Verificar si el administrador bloqueó/canceló la fecha completa
+    const wholeDayBlock = db.prepare('SELECT reason FROM blocked_slots WHERE block_date = ? AND time_slot IS NULL').get(new_date);
+    if (wholeDayBlock) {
       return res.status(400).json({
-        error: 'Horario no permitido. RUFO Precise Detailing atiende exclusivamente a las 8:00 AM, 9:00 AM, 2:00 PM y 3:00 PM.'
+        error: `Atención cerrada para esa fecha por el administrador: ${wholeDayBlock.reason}`
+      });
+    }
+
+    // 2. Verificar si el nuevo turno fue cancelado por el administrador
+    const slotBlock = db.prepare('SELECT reason FROM blocked_slots WHERE block_date = ? AND time_slot = ?').get(new_date, new_time);
+    if (slotBlock) {
+      return res.status(400).json({
+        error: `El horario ${new_time} fue cancelado por el administrador para esa fecha: ${slotBlock.reason}`
+      });
+    }
+
+    // 3. Validar que el nuevo horario esté activo en el sistema
+    const activeSlot = db.prepare('SELECT id FROM schedule_slots WHERE time_slot = ? AND is_active = 1').get(new_time);
+    if (!activeSlot) {
+      return res.status(400).json({
+        error: 'Horario no permitido o inactivo en el sistema.'
       });
     }
 

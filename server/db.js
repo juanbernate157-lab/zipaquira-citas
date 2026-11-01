@@ -100,7 +100,43 @@ function initDb() {
       details TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS schedule_slots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      time_slot TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      period TEXT NOT NULL DEFAULT 'morning',
+      period_label TEXT NOT NULL DEFAULT 'Mañana',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS blocked_slots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      block_date TEXT NOT NULL,
+      time_slot TEXT DEFAULT NULL,
+      reason TEXT DEFAULT 'Cancelado por el administrador',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
   `);
+
+  // Seed default schedule slots if empty
+  const slotCount = db.prepare('SELECT COUNT(*) as count FROM schedule_slots').get();
+  if (!slotCount || slotCount.count === 0) {
+    const defaultSlots = [
+      { time_slot: '08:00', label: '08:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
+      { time_slot: '09:00', label: '09:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
+      { time_slot: '14:00', label: '02:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
+      { time_slot: '15:00', label: '03:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
+    ];
+    const insertSlot = db.prepare(`
+      INSERT INTO schedule_slots (time_slot, label, period, period_label, is_active)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    for (const s of defaultSlots) {
+      insertSlot.run(s.time_slot, s.label, s.period, s.period_label, s.is_active);
+    }
+  }
 
   // Seed default settings row if empty
   const countRow = db.prepare('SELECT COUNT(*) as count FROM settings').get();

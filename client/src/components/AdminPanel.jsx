@@ -4,7 +4,7 @@ import {
   Plus, Edit2, Trash2, Settings as SettingsIcon, Mail, QrCode, Search,
   Filter, Phone, ExternalLink, Shield, Save, Eye, Bell,
   Sparkles, AlertCircle, Lock, User, KeyRound, Zap, ArrowRight,
-  Flame, Gauge, Check
+  Flame, Gauge, Check, Sun, Sunset, Ban, CheckCircle2, AlertTriangle
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -43,6 +43,22 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
   const [settingsSuccess, setSettingsSuccess] = useState('');
   const [settingsError, setSettingsError] = useState('');
 
+  // Schedules & Cancellations Management state
+  const [scheduleSlots, setScheduleSlots] = useState([]);
+  const [blockedSlots, setBlockedSlots] = useState([]);
+  const [workingDays, setWorkingDays] = useState([1, 2, 3, 4, 5, 6]);
+  const [loadingSchedules, setLoadingSchedules] = useState(false);
+  const [scheduleMsg, setScheduleMsg] = useState({ type: '', text: '' });
+
+  // Add new master slot form
+  const [newSlotTime, setNewSlotTime] = useState('10:00');
+  const [newSlotPeriod, setNewSlotPeriod] = useState('morning');
+
+  // Block / cancel slot form
+  const [blockDate, setBlockDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [blockTimeSlot, setBlockTimeSlot] = useState('ALL');
+  const [blockReason, setBlockReason] = useState('Mantenimiento preventivo / Cierre temporal');
+
   // Network IP for phone scanning (so phone never tries localhost)
   const [lanIp, setLanIp] = useState('192.168.1.40');
 
@@ -73,6 +89,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
       fetchAppointments();
       fetchServices();
       fetchAdminSettings();
+      fetchSchedulesOverview();
 
       // Real-time auto-refresh every 8 seconds
       const interval = setInterval(() => {
@@ -151,6 +168,132 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
         setSettings(data || {});
       })
       .catch((err) => console.error(err));
+  };
+
+  // Schedules management functions
+  const fetchSchedulesOverview = async () => {
+    setLoadingSchedules(true);
+    try {
+      const res = await fetch('/api/schedules/overview');
+      const data = await res.json();
+      setScheduleSlots(data.slots || []);
+      setBlockedSlots(data.blocked || []);
+      if (data.workingDays) setWorkingDays(data.workingDays);
+      setLoadingSchedules(false);
+    } catch (err) {
+      console.error(err);
+      setLoadingSchedules(false);
+    }
+  };
+
+  const handleToggleSlot = async (slotId) => {
+    try {
+      const res = await fetch(`/api/schedules/slots/${slotId}/toggle`, { method: 'PUT' });
+      if (res.ok) {
+        fetchSchedulesOverview();
+        setScheduleMsg({ type: 'success', text: 'Estado del turno actualizado exitosamente' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteSlot = async (slotId) => {
+    if (!window.confirm('¿Estás seguro de eliminar este horario maestro de atención?')) return;
+    try {
+      const res = await fetch(`/api/schedules/slots/${slotId}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchSchedulesOverview();
+        setScheduleMsg({ type: 'success', text: 'Horario eliminado correctamente' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddSlot = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/schedules/slots', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          time_slot: newSlotTime,
+          period: newSlotPeriod,
+          period_label: newSlotPeriod === 'morning' ? 'Mañana' : 'Tarde',
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchSchedulesOverview();
+        setScheduleMsg({ type: 'success', text: `Turno ${newSlotTime} agregado exitosamente a la agenda.` });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+      } else {
+        setScheduleMsg({ type: 'error', text: data.error || 'Error al agregar turno' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 4000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAddBlockedSlot = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/schedules/blocked', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          block_date: blockDate,
+          time_slot: blockTimeSlot,
+          reason: blockReason,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchSchedulesOverview();
+        setScheduleMsg({ type: 'success', text: 'Horario o fecha cancelada/bloqueada con éxito para los clientes.' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+      } else {
+        setScheduleMsg({ type: 'error', text: data.error || 'Error al cancelar horario' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 4000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleRemoveBlockedSlot = async (id) => {
+    try {
+      const res = await fetch(`/api/schedules/blocked/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        fetchSchedulesOverview();
+        setScheduleMsg({ type: 'success', text: 'Horario desbloqueado y reactivado para reservas.' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleToggleWorkingDay = async (dayNum) => {
+    const updated = workingDays.includes(dayNum)
+      ? workingDays.filter(d => d !== dayNum)
+      : [...workingDays, dayNum].sort((a, b) => a - b);
+    setWorkingDays(updated);
+    try {
+      await fetch('/api/schedules/working-days', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ working_days: updated }),
+      });
+      setScheduleMsg({ type: 'success', text: 'Días de atención guardados exitosamente.' });
+      setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   // Appointment Status update
@@ -549,6 +692,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
           {[
             { id: 'appointments', label: 'Citas & Auditoría', icon: Calendar },
             { id: 'services', label: 'Gestión de Servicios', icon: Sparkles },
+            { id: 'schedules', label: 'Horarios & Cancelaciones', icon: Clock },
             { id: 'cms', label: 'Editar Página (Control Total)', icon: SettingsIcon },
             { id: 'notifications', label: 'Ajustes de Correo (SMTP)', icon: Bell },
           ].map((tab) => {
@@ -1110,7 +1254,328 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
         )}
 
         {/* ======================================================== */}
-        {/* TAB 3: CONTROL TOTAL DE LA PÁGINA (CMS) */}
+        {/* TAB: HORARIOS & CANCELACIÓN DE TURNOS */}
+        {/* ======================================================== */}
+        {activeTab === 'schedules' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                  <Clock className="w-6 h-6 text-cyan-400" />
+                  <span>Gestión de Horarios y Cancelación de Turnos</span>
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Modifica los horarios de atención recurrentes y cancela o bloquea turnos/fechas específicas en tiempo real.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={fetchSchedulesOverview}
+                className="px-4 py-2 rounded-xl bg-blue-950/70 border border-blue-500/40 text-cyan-300 text-xs font-bold hover:bg-blue-900 transition flex items-center gap-2"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingSchedules ? 'animate-spin' : ''}`} />
+                <span>Refrescar Horarios</span>
+              </button>
+            </div>
+
+            {scheduleMsg.text && (
+              <div className={`p-4 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 border ${
+                scheduleMsg.type === 'error'
+                  ? 'bg-red-500/20 border-red-500/40 text-red-300'
+                  : 'bg-green-500/20 border-green-500/40 text-green-300'
+              }`}>
+                {scheduleMsg.type === 'error' ? <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" /> : <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />}
+                <span>{scheduleMsg.text}</span>
+              </div>
+            )}
+
+            {/* PARTE 1: MODIFICAR HORARIOS DE SERVICIOS (TURNOS MAESTROS) */}
+            <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-6">
+              <div className="flex items-center justify-between border-b border-blue-900/40 pb-3">
+                <div>
+                  <h4 className="font-extrabold text-white text-base flex items-center gap-2">
+                    <span>1. Turnos de Atención del Negocio (Horarios Recurrentes)</span>
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/20 text-cyan-300 border border-blue-500/30">
+                      {scheduleSlots.filter(s => s.is_active).length} activos
+                    </span>
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Activa, pausa o agrega nuevos horarios en los que RUFO Precise Detailing recibe vehículos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Grid de Turnos Actuales */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                {scheduleSlots.map((slot) => {
+                  const isMorning = slot.period === 'morning' || slot.time_slot < '12:00';
+                  return (
+                    <div
+                      key={slot.id}
+                      className={`p-4 rounded-2xl border transition-all ${
+                        slot.is_active
+                          ? 'bg-blue-950/30 border-blue-500/40 shadow-sm'
+                          : 'bg-black/30 border-gray-800 opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                          isMorning ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                        }`}>
+                          {isMorning ? <Sun className="w-3 h-3 text-amber-400" /> : <Sunset className="w-3 h-3 text-cyan-400" />}
+                          <span>{slot.period_label || (isMorning ? 'Mañana' : 'Tarde')}</span>
+                        </span>
+                        
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          slot.is_active ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-gray-800 text-gray-400'
+                        }`}>
+                          {slot.is_active ? 'Activo' : 'Pausado'}
+                        </span>
+                      </div>
+
+                      <div className="text-xl font-black text-white font-mono my-1">
+                        {slot.label || slot.time_slot}
+                      </div>
+                      <div className="text-[11px] text-gray-400 font-mono">
+                        {slot.time_slot} (24h)
+                      </div>
+
+                      <div className="mt-3 pt-3 border-t border-blue-900/40 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSlot(slot.id)}
+                          className={`flex-1 py-1 px-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer ${
+                            slot.is_active
+                              ? 'bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40'
+                              : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40'
+                          }`}
+                        >
+                          <span>{slot.is_active ? 'Pausar' : 'Activar'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSlot(slot.id)}
+                          className="p-1 px-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs transition cursor-pointer"
+                          title="Eliminar este horario permanentemente"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Formulario Agregar Nuevo Horario */}
+              <form onSubmit={handleAddSlot} className="bg-black/30 p-4 rounded-2xl border border-blue-900/50 flex flex-col sm:flex-row items-end gap-3">
+                <div className="flex-1 w-full sm:w-auto">
+                  <label className="block text-xs font-bold text-gray-300 mb-1">
+                    Hora del Nuevo Turno (Formato 24h)
+                  </label>
+                  <input
+                    type="time"
+                    required
+                    value={newSlotTime}
+                    onChange={(e) => setNewSlotTime(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-blue-900/60 text-white font-mono text-sm focus:border-cyan-400 focus:outline-none"
+                  />
+                </div>
+
+                <div className="w-full sm:w-48">
+                  <label className="block text-xs font-bold text-gray-300 mb-1">
+                    Jornada
+                  </label>
+                  <select
+                    value={newSlotPeriod}
+                    onChange={(e) => setNewSlotPeriod(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-blue-900/60 text-white font-bold text-sm focus:border-cyan-400 focus:outline-none"
+                  >
+                    <option value="morning">🌅 Mañana</option>
+                    <option value="afternoon">🌆 Tarde</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Agregar Turno</span>
+                </button>
+              </form>
+
+              {/* Días Laborables de la Semana */}
+              <div className="pt-2 border-t border-blue-900/30">
+                <label className="block text-xs font-bold text-gray-300 mb-2">
+                  Días en que se atiende citas en la semana (Haz clic para activar/desactivar):
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { num: 1, label: 'Lunes' },
+                    { num: 2, label: 'Martes' },
+                    { num: 3, label: 'Miércoles' },
+                    { num: 4, label: 'Jueves' },
+                    { num: 5, label: 'Viernes' },
+                    { num: 6, label: 'Sábado' },
+                    { num: 0, label: 'Domingo' },
+                  ].map((d) => {
+                    const isChecked = workingDays.includes(d.num);
+                    return (
+                      <button
+                        key={d.num}
+                        type="button"
+                        onClick={() => handleToggleWorkingDay(d.num)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border cursor-pointer ${
+                          isChecked
+                            ? 'bg-blue-600 text-white border-blue-500 shadow-sm'
+                            : 'bg-black/40 text-gray-400 border-gray-800 hover:border-gray-700'
+                        }`}
+                      >
+                        <span>{isChecked ? '✓' : '✗'}</span>
+                        <span>{d.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* PARTE 2: CANCELAR / BLOQUEAR HORARIOS POR FECHA (BLACKOUTS) */}
+            <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-6">
+              <div className="flex items-center justify-between border-b border-blue-900/40 pb-3">
+                <div>
+                  <h4 className="font-extrabold text-white text-base flex items-center gap-2">
+                    <Ban className="w-5 h-5 text-red-400" />
+                    <span>2. Cancelar o Bloquear Horarios por Fecha</span>
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Si no vas a atender en un turno o día determinado (por mantenimiento, festivo o imprevisto), cancélalo aquí para que los clientes no puedan agendarlo.
+                  </p>
+                </div>
+              </div>
+
+              {/* Formulario para Cancelar Horario */}
+              <form onSubmit={handleAddBlockedSlot} className="bg-red-950/20 border border-red-500/30 p-5 rounded-2xl space-y-4">
+                <h5 className="text-sm font-black text-red-300 flex items-center gap-1.5">
+                  <span>Formulario de Cancelación de Horario</span>
+                </h5>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-300 mb-1">
+                      Fecha a Cancelar *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      min={new Date().toISOString().slice(0, 10)}
+                      value={blockDate}
+                      onChange={(e) => setBlockDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-red-500/40 text-white font-bold text-sm focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-300 mb-1">
+                      Turno a Cancelar *
+                    </label>
+                    <select
+                      value={blockTimeSlot}
+                      onChange={(e) => setBlockTimeSlot(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-red-500/40 text-white font-bold text-sm focus:outline-none"
+                    >
+                      <option value="ALL">🚫 TODO EL DÍA (Cierre completo)</option>
+                      {scheduleSlots.map((s) => (
+                        <option key={s.id} value={s.time_slot}>
+                          ⏰ Turno: {s.label || s.time_slot} ({s.period_label || s.period})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-300 mb-1">
+                      Motivo de la Cancelación
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej: Mantenimiento de maquinaria, Cierre por festivo"
+                      value={blockReason}
+                      onChange={(e) => setBlockReason(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-red-500/40 text-white text-xs sm:text-sm focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs sm:text-sm shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Ban className="w-4 h-4" />
+                    <span>Cancelar / Bloquear Horario</span>
+                  </button>
+                </div>
+              </form>
+
+              {/* Lista de Horarios Cancelados Activos */}
+              <div>
+                <h5 className="text-xs font-black text-gray-300 uppercase tracking-wider mb-3">
+                  Horarios y Días Actualmente Cancelados / Bloqueados ({blockedSlots.length}):
+                </h5>
+
+                {blockedSlots.length === 0 ? (
+                  <div className="p-6 bg-black/20 rounded-2xl border border-gray-800 text-center text-xs font-bold text-gray-500">
+                    No hay horarios bloqueados o cancelados. Todos los turnos configurados están disponibles para reservas.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {blockedSlots.map((b) => (
+                      <div
+                        key={b.id}
+                        className="p-4 rounded-2xl bg-red-950/30 border border-red-500/40 flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-black text-red-400 font-mono">
+                              {b.block_date}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                              {b.time_slot ? `Turno ${b.time_slot}` : 'Día Completo'}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-gray-300 font-medium mt-1">
+                            <strong className="text-white">Motivo:</strong> {b.reason || 'Cancelado por administración'}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-red-500/20 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBlockedSlot(b.id)}
+                            className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span>Rehabilitar Horario</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* TAB 4: CONTROL TOTAL DE LA PÁGINA (CMS) */}
         {/* ======================================================== */}
         {activeTab === 'cms' && (
           <form onSubmit={handleSaveSettings} className="space-y-6">
