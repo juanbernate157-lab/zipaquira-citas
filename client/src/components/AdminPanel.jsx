@@ -418,100 +418,97 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
             </div>
 
             {/* Glowing Big Typography & Detailing Badge */}
-            <div className="relative z-10 pt-14 sm:pt-12">
-              <div className="flex items-center gap-3 mb-3">
-                <img 
-                  src="/rufo-logo.png" 
-                  alt="RUFO Precise Detailing" 
-                  className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.8)] hover:scale-105 transition-transform" 
-                />
-                <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm inline-flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-                  <span>PRECISE DETAILING</span>
-                </span>
+            <div className="relative z-10 pt-10 sm:pt-8">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-widest bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-sm backdrop-blur-md mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-spin" />
+                <span>EXCELLENCE IN AUTOMOTIVE DETAILING</span>
               </div>
 
               <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-none">
-                Welcome <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">
-                  Back.
+                RUFO <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-300">
+                  Precise Detailing.
                 </span>
               </h2>
-              <p className="text-xs sm:text-sm text-gray-300 max-w-sm mt-3 leading-relaxed">
-                Plataforma de gestión de citas y control total de <strong>RUFO Precise Detailing</strong>.
+              <p className="text-xs sm:text-sm text-cyan-200/80 max-w-sm mt-3 leading-relaxed font-medium">
+                Panel maestro de administración, gestión de citas y control de calidad. <em>Each Precise Detail Counts.</em>
               </p>
             </div>
 
-            {/* 3D ANIMATED LAMBORGHINI HURACÁN SHOWCASE */}
-            <div className="relative z-10 my-6 flex flex-col items-center justify-center">
+            {/* HIGH-END 3D RUFO EMBLEM SHOWCASE */}
+            <div className="relative z-10 my-8 flex flex-col items-center justify-center">
               
-              {/* Neon Headlight Glow Beams (Electric Blue) */}
-              {headlightsOn && (
-                <div className="absolute -left-10 top-1/2 -translate-y-1/2 w-48 h-32 bg-cyan-400/30 blur-3xl pointer-events-none rounded-full animate-pulse" />
-              )}
+              {/* Radial Halo Lighting */}
+              <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full blur-3xl pointer-events-none transition-all duration-700 ${
+                headlightsOn ? 'bg-gradient-to-tr from-cyan-500/40 via-blue-600/30 to-indigo-500/20 opacity-100 scale-110' : 'bg-blue-600/20 opacity-50 scale-90'
+              }`} />
 
-              {/* Lamborghini Image with Floating 3D tilt */}
+              {/* RUFO Emblem with Floating 3D tilt & Luxury Reflection */}
               <div 
-                className={`relative transition-all duration-700 ease-out animate-float-car ${sportMode ? 'scale-105' : ''}`}
+                className={`relative transition-all duration-700 ease-out animate-float-car cursor-pointer ${sportMode ? 'scale-105' : ''}`}
                 style={{
                   transform: `perspective(1000px) rotateY(${carAngle}deg)`,
                 }}
+                onClick={() => setCarAngle(carAngle === 0 ? 12 : carAngle === 12 ? -12 : 0)}
               >
-                <img
-                  src="/lamborghini-huracan.png"
-                  alt="Lamborghini Huracán"
-                  className={`w-full max-w-md sm:max-w-lg object-contain transition-all duration-500 drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)] ${
-                    headlightsOn ? 'animate-headlights' : ''
-                  }`}
-                />
+                {/* Outer Glass Aura */}
+                <div className="p-4 sm:p-6 rounded-3xl bg-white/[0.03] backdrop-blur-sm border border-cyan-500/30 shadow-[0_0_50px_rgba(6,182,212,0.35)] flex items-center justify-center">
+                  <img
+                    src="/rufo-logo.png"
+                    alt="RUFO Precise Detailing"
+                    className={`w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px] object-contain transition-all duration-500 drop-shadow-[0_25px_35px_rgba(0,0,0,0.95)] drop-shadow-[0_0_35px_rgba(6,182,212,0.65)] hover:scale-105 ${
+                      headlightsOn ? 'brightness-110 contrast-105' : ''
+                    }`}
+                  />
+                </div>
 
                 {/* Cyber Neon Ground Reflection */}
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-6 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent blur-md rounded-full" />
+                <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4/5 h-8 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent blur-lg rounded-full" />
               </div>
 
-              {/* Interactive Vehicle Controls Bar */}
-              <div className="mt-4 flex items-center gap-2 bg-[#050814]/80 backdrop-blur-md px-4 py-2 rounded-full border border-blue-500/30 shadow-lg">
+              {/* Interactive Luxury Detailing Controls */}
+              <div className="mt-6 flex items-center gap-2 bg-[#050814]/90 backdrop-blur-md px-4 py-2 rounded-full border border-cyan-500/30 shadow-xl">
                 <button
                   type="button"
                   onClick={() => setHeadlightsOn(!headlightsOn)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
                     headlightsOn ? 'bg-cyan-500 text-black shadow-md shadow-cyan-400/50' : 'bg-white/10 text-gray-400'
                   }`}
                 >
-                  <Zap className="w-3 h-3" />
-                  <span>{headlightsOn ? 'Luces ON' : 'Luces OFF'}</span>
+                  <Zap className="w-3.5 h-3.5" />
+                  <span>{headlightsOn ? 'Brillo Intenso ON' : 'Brillo OFF'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setSportMode(!sportMode)}
-                  className={`px-3 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
-                    sportMode ? 'bg-gradient-to-r from-red-600 to-amber-500 text-white shadow-md' : 'bg-white/10 text-gray-400'
+                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
+                    sportMode ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/40' : 'bg-white/10 text-gray-400'
                   }`}
                 >
-                  <Flame className="w-3 h-3 text-amber-300" />
-                  <span>Sport Huracán</span>
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
+                  <span>Acabado Cerámico</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setCarAngle(carAngle === 0 ? 12 : carAngle === 12 ? -12 : 0)}
-                  className="px-3 py-1 rounded-full text-[11px] font-bold bg-white/10 hover:bg-white/20 text-gray-300 flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/10 hover:bg-white/20 text-gray-300 flex items-center gap-1 transition"
                 >
-                  <Gauge className="w-3 h-3 text-blue-400" />
-                  <span>3D Tilt</span>
+                  <Gauge className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Perspectiva 3D</span>
                 </button>
               </div>
 
             </div>
 
             {/* Bottom specs */}
-            <div className="relative z-10 flex items-center justify-between text-[11px] text-gray-400 pt-4 border-t border-blue-900/30">
-              <span className="flex items-center gap-1.5">
+            <div className="relative z-10 flex items-center justify-between text-[11px] text-gray-400 pt-4 border-t border-blue-900/40">
+              <span className="flex items-center gap-1.5 font-bold text-gray-300">
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-                <span>Lamborghini Huracán V10 Active</span>
+                <span>Emblema Oficial RUFO • Precisión Grado Maestro</span>
               </span>
-              <span className="text-cyan-400 font-mono font-bold">RUFO Precise Detailing</span>
+              <span className="text-cyan-400 font-mono font-bold tracking-wider">ZIPAQUIRÁ</span>
             </div>
 
           </div>
