@@ -9,7 +9,7 @@ import AdminPanel from './components/AdminPanel';
 import EmailLogsModal from './components/EmailLogsModal';
 import {
   Sparkles, MapPin, Phone, Mail, Clock,
-  Calendar, Shield, QrCode, Heart, CheckCircle2, Zap
+  Calendar, Shield, QrCode, Heart, CheckCircle2, Zap, MessageCircle
 } from 'lucide-react';
 
 export default function App() {
@@ -135,9 +135,14 @@ export default function App() {
         <AdminPanel
           onOpenShare={() => setShowShareModal(true)}
           onOpenEmailLogs={() => setShowEmailLogsModal(true)}
+          onSettingsSaved={(newSettings) => {
+            if (newSettings) setSettings(newSettings);
+            fetchData();
+          }}
           onExit={() => {
             window.location.hash = '';
             setCurrentView('public');
+            fetchData();
           }}
         />
 
@@ -286,12 +291,37 @@ export default function App() {
               <h4 className="font-black text-white uppercase tracking-wider text-[11px]">Contacto Directo</h4>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <span>{settings?.phone || '+57 312 345 6789'}</span>
+                <a
+                  href={`tel:${(settings?.phone || settings?.whatsapp || '+57 300 604 2818').replace(/\s+/g, '')}`}
+                  className="hover:underline hover:text-green-300 font-medium text-gray-200 transition"
+                  title="Llamar directamente"
+                >
+                  {settings?.phone || settings?.whatsapp || '+57 300 604 2818'}
+                </a>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>{settings?.contact_email || 'juanbernate157@gmail.com'}</span>
+                <a
+                  href={`mailto:${settings?.contact_email || 'juanbernate157@gmail.com'}`}
+                  className="hover:underline hover:text-blue-300 transition"
+                  title="Enviar correo"
+                >
+                  {settings?.contact_email || 'juanbernate157@gmail.com'}
+                </a>
               </p>
+              {(settings?.whatsapp || settings?.phone) && (
+                <div className="pt-1.5">
+                  <a
+                    href={`https://wa.me/${(settings?.whatsapp || settings?.phone).replace(/[^0-9]/g, '')}?text=${encodeURIComponent('¡Hola RUFO Precise Detailing! Me gustaría solicitar información sobre sus servicios de detailing.')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 text-[11px] font-bold transition shadow-sm hover:scale-105"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>WhatsApp: {settings?.whatsapp || settings?.phone || '+57 300 604 2818'}</span>
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}

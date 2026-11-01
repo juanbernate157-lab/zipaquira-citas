@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
+export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSettingsSaved }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [usernameInput, setUsernameInput] = useState('admin');
   const [passwordInput, setPasswordInput] = useState('');
@@ -386,6 +386,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
       setSavingSettings(false);
       if (res.ok) {
         setSettingsSuccess('¡Configuración de RUFO Precise Detailing guardada exitosamente!');
+        if (onSettingsSaved) onSettingsSaved(data.settings);
         setTimeout(() => setSettingsSuccess(''), 4000);
       } else {
         setSettingsError(data.error || 'Error al guardar la configuración');
@@ -1712,12 +1713,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div>
-                  <label className="block font-bold text-gray-300 mb-1">Teléfono / WhatsApp</label>
+                  <label className="block font-bold text-gray-300 mb-1">Teléfono Móvil / WhatsApp</label>
                   <input
                     type="text"
-                    value={settings.whatsapp || ''}
-                    onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
+                    value={settings.whatsapp || settings.phone || ''}
+                    onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value, phone: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white"
+                    placeholder="+57 300 604 2818"
                   />
                 </div>
                 <div>

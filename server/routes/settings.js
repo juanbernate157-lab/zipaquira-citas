@@ -102,6 +102,13 @@ router.put('/', (req, res) => {
       }
     }
 
+    // Mantener sincronizados phone y whatsapp si solo se envía uno de los dos
+    if (updates.whatsapp && !updates.phone) {
+      updates.phone = updates.whatsapp;
+    } else if (updates.phone && !updates.whatsapp) {
+      updates.whatsapp = updates.phone;
+    }
+
     if (Object.keys(updates).length > 0) {
       updateSettings(updates);
     }
