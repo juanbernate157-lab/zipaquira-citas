@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, AlertTriangle, CheckCircle2, RefreshCw, Trash2, ArrowLeft, Search, MapPin, QrCode } from 'lucide-react';
+import { X, Calendar, Clock, AlertTriangle, CheckCircle2, RefreshCw, Trash2, ArrowLeft, Search, MapPin, QrCode, Sun, Sunset } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function ManageAppointmentModal({ initialCode = '', initialAction = '', onClose, onUpdated }) {
@@ -22,17 +22,23 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const [lanIp, setLanIp] = useState('192.168.1.40');
+  const [qrBaseUrl, setQrBaseUrl] = useState('');
 
   useEffect(() => {
     fetch('/api/network-ip')
       .then((r) => r.json())
       .then((data) => {
-        if (data.ip && data.ip !== 'localhost' && data.ip !== '127.0.0.1') {
-          setLanIp(data.ip);
+        if (data.globalUrl) {
+          setQrBaseUrl(data.globalUrl.replace(/\/citas$/, ''));
+        } else if (data.ip && data.ip !== 'localhost' && data.ip !== '127.0.0.1') {
+          setQrBaseUrl(`http://${data.ip}:5000`);
+        } else {
+          setQrBaseUrl(window.location.origin);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        setQrBaseUrl(window.location.origin);
+      });
   }, []);
 
   // Auto-search if code provided
@@ -178,7 +184,7 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
         <div className="bg-gradient-to-r from-blue-950 to-gray-900 px-6 py-5 text-white flex items-center justify-between border-b border-blue-900/50">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-black text-white">Gestión de Citas • Zipaquirá Enterprise</h2>
+            <h2 className="text-lg font-black text-white">Gestión de Citas • RUFO Precise Detailing</h2>
           </div>
           <button
             onClick={onClose}
@@ -296,11 +302,11 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-4 text-center flex flex-col items-center justify-center">
                   <p className="text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">
                     <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                    Presenta este código al llegar a Zipaquirá Enterprise
+                    Presenta este código al llegar a RUFO Precise Detailing
                   </p>
                   <div className="p-3 bg-white border-2 border-gray-200 rounded-2xl shadow-sm">
                     <QRCodeSVG
-                      value={`http://${lanIp}:5000/cita/${appointment.code}`}
+                      value={`${qrBaseUrl || window.location.origin}/cita/${appointment.code}`}
                       size={140}
                       level="H"
                       fgColor="#000000"
@@ -367,9 +373,14 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black text-gray-900 mb-1">
-                    Nuevo Horario Disponible
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-black text-gray-900">
+                      Nuevo Horario Disponible
+                    </label>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                      Turnos RUFO (8-9 AM y 2-3 PM)
+                    </span>
+                  </div>
                   {loadingSlots ? (
                     <div className="py-6 text-center text-xs font-bold text-gray-600">Cargando turnos disponibles...</div>
                   ) : availableSlots.length === 0 ? (
@@ -377,24 +388,70 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
                       No hay turnos disponibles para esta fecha.
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-1">
-                      {availableSlots.map((slot) => (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          disabled={!slot.available}
-                          onClick={() => setNewTime(slot.time)}
-                          className={`py-2 px-3 rounded-xl text-xs font-black transition text-center ${
-                            newTime === slot.time
-                              ? 'bg-blue-600 text-white shadow-md'
-                              : !slot.available
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed line-through'
-                              : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200'
-                          }`}
-                        >
-                          {slot.time}
-                        </button>
-                      ))}
+                    <div className="space-y-2.5">
+                      {/* Mañana */}
+                      <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-2.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-black text-amber-900 uppercase tracking-wider mb-1.5">
+                          <Sun className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Mañana (8:00 AM y 9:00 AM)</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {availableSlots.filter(s => s.period === 'morning' || s.time === '08:00' || s.time === '09:00').map((slot) => (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={!slot.available}
+                              onClick={() => setNewTime(slot.time)}
+                              className={`py-2 px-2 rounded-xl text-xs font-black transition text-center flex flex-col items-center justify-center ${
+                                newTime === slot.time
+                                  ? 'bg-blue-600 text-white shadow-md ring-2 ring-cyan-400'
+                                  : !slot.available
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 opacity-60'
+                                  : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200'
+                              }`}
+                            >
+                              <span className="font-black text-sm">{slot.label || slot.time}</span>
+                              <span className={`text-[9px] font-bold ${
+                                newTime === slot.time ? 'text-cyan-200' : !slot.available ? 'text-gray-400' : 'text-emerald-600'
+                              }`}>
+                                {slot.isPast ? 'Pasado' : slot.isBooked ? 'Ocupado' : 'Disponible'}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Tarde */}
+                      <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-2.5">
+                        <div className="flex items-center gap-1.5 text-[11px] font-black text-blue-900 uppercase tracking-wider mb-1.5">
+                          <Sunset className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Tarde (2:00 PM y 3:00 PM)</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {availableSlots.filter(s => s.period === 'afternoon' || s.time === '14:00' || s.time === '15:00').map((slot) => (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={!slot.available}
+                              onClick={() => setNewTime(slot.time)}
+                              className={`py-2 px-2 rounded-xl text-xs font-black transition text-center flex flex-col items-center justify-center ${
+                                newTime === slot.time
+                                  ? 'bg-blue-600 text-white shadow-md ring-2 ring-cyan-400'
+                                  : !slot.available
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 opacity-60'
+                                  : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200'
+                              }`}
+                            >
+                              <span className="font-black text-sm">{slot.label || (slot.time === '14:00' ? '02:00 PM' : '03:00 PM')}</span>
+                              <span className={`text-[9px] font-bold ${
+                                newTime === slot.time ? 'text-cyan-200' : !slot.available ? 'text-gray-400' : 'text-emerald-600'
+                              }`}>
+                                {slot.isPast ? 'Pasado' : slot.isBooked ? 'Ocupado' : 'Disponible'}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

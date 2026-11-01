@@ -114,7 +114,7 @@ async function sendEmail({ to, subject, html, type, appointmentCode, icalContent
 
   if (transporter) {
     try {
-      const from = settings.smtp_from || `${settings.business_name} <no-reply@zipaquiraenterprise.com>`;
+      const from = settings.smtp_from || `${settings.business_name || 'RUFO Precise Detailing'} <juanbernate157@gmail.com>`;
       
       const mailOptions = {
         from,
@@ -132,7 +132,7 @@ async function sendEmail({ to, subject, html, type, appointmentCode, icalContent
         };
         mailOptions.attachments = [
           {
-            filename: 'cita-zipaquira.ics',
+            filename: 'cita-rufo.ics',
             content: icalContent,
             contentType: 'text/calendar; charset=utf-8; method=REQUEST',
           },
@@ -188,7 +188,7 @@ function getBaseTemplate(content, settings) {
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${settings?.business_name || 'Zipaquirá Enterprise'}</title>
+    <title>${settings?.business_name || 'RUFO Precise Detailing'}</title>
     <style>
       body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #050711; margin: 0; padding: 20px 0; color: #1e293b; }
       .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
@@ -215,14 +215,14 @@ function getBaseTemplate(content, settings) {
   <body>
     <div class="container">
       <div class="header">
-        <h1>${settings?.business_name || 'Zipaquirá Enterprise'}</h1>
-        <p>${settings?.tagline || 'Innovación & Excelencia en Cada Servicio'}</p>
+        <h1>${settings?.business_name || 'RUFO Precise Detailing'}</h1>
+        <p>${settings?.tagline || 'Each Precise Detail Counts'}</p>
       </div>
       <div class="body">
         ${content}
       </div>
       <div class="footer">
-        <p style="margin: 0 0 6px 0; color: #ffffff; font-weight: 700;">${settings?.business_name || 'Zipaquirá Enterprise'} • ${settings?.city || 'Zipaquirá, Colombia'}</p>
+        <p style="margin: 0 0 6px 0; color: #ffffff; font-weight: 700;">${settings?.business_name || 'RUFO Precise Detailing'} • ${settings?.city || 'Zipaquirá, Colombia'}</p>
         <p style="margin: 0;">${settings?.address || 'Calle 5 # 10-25'}</p>
       </div>
     </div>

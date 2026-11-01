@@ -60,7 +60,7 @@ export default function ShareQRModal({ settings, onClose }) {
 
       const pngFile = canvas.toDataURL('image/png');
       const downloadLink = document.createElement('a');
-      downloadLink.download = `QR-ZipaquiraEnterprise-citas.png`;
+      downloadLink.download = `QR-RUFO-Precise-Detailing-citas.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
     };
@@ -69,7 +69,7 @@ export default function ShareQRModal({ settings, onClose }) {
   };
 
   const whatsappMessage = encodeURIComponent(
-    `¡Hola! Agenda tu cita en Zipaquirá Enterprise directamente aquí: ${activeUrl}`
+    `¡Hola! Agenda tu cita en RUFO Precise Detailing directamente aquí: ${activeUrl}`
   );
 
   return (

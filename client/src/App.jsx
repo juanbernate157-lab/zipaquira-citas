@@ -110,12 +110,12 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#050711] flex flex-col items-center justify-center space-y-4 text-white">
         <div className="w-12 h-12 rounded-full border-4 border-blue-500 border-t-transparent animate-spin shadow-lg shadow-blue-500/50" />
-        <p className="text-sm font-extrabold text-blue-400 font-mono tracking-wider">Cargando Zipaquirá Enterprise...</p>
+        <p className="text-sm font-extrabold text-blue-400 font-mono tracking-wider">Cargando RUFO Precise Detailing...</p>
       </div>
     );
   }
 
-  const brandName = settings?.business_name || 'Zipaquirá Enterprise';
+  const brandName = settings?.business_name || 'RUFO Precise Detailing';
 
   // ADMIN VIEW
   if (currentView === 'admin') {
@@ -279,7 +279,7 @@ export default function App() {
               <h4 className="font-black text-white uppercase tracking-wider text-[11px] pt-3">Horario de Atención</h4>
               <p className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span>{settings?.opening_time || '08:00'} a {settings?.closing_time || '19:00'}</span>
+                <span>8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM</span>
               </p>
             </div>
 
@@ -292,7 +292,7 @@ export default function App() {
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span>{settings?.contact_email || 'contacto@zipaquiraenterprise.com'}</span>
+                <span>{settings?.contact_email || 'juanbernate157@gmail.com'}</span>
               </p>
             </div>
 

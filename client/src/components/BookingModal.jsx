@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, User, Mail, Phone, FileText, Sparkles, Share2 } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, User, Mail, Phone, FileText, Sparkles, Share2, Sun, Sunset } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function BookingModal({ service, settings, onClose, onBookingSuccess }) {
@@ -239,11 +239,16 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                 </div>
               </div>
 
-              {/* Time Slots */}
+              {/* Time Slots: Horarios Exclusivos RUFO Precise Detailing (8-9 AM y 2-3 PM) */}
               <div>
-                <label className="block text-sm font-black text-gray-900 mb-2">
-                  2. Selecciona la Hora Disponible
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-black text-gray-900">
+                    2. Selecciona la Hora de Atención
+                  </label>
+                  <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                    Turnos Exclusivos
+                  </span>
+                </div>
 
                 {loadingSlots ? (
                   <div className="py-8 text-center text-gray-600 text-sm flex flex-col items-center justify-center gap-2">
@@ -260,29 +265,78 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                     No hay turnos disponibles para esta fecha. Intenta seleccionando otro día.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-52 overflow-y-auto pr-1">
-                    {availableSlots.map((slot) => {
-                      const isSelected = selectedTime === slot.time;
-                      const isDisabled = !slot.available;
+                  <div className="space-y-3">
+                    {/* Jornada Mañana */}
+                    <div className="bg-amber-50/60 border border-amber-200/80 rounded-2xl p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-amber-900 uppercase tracking-wider mb-2">
+                        <Sun className="w-3.5 h-3.5 text-amber-600" />
+                        <span>Jornada Mañana (8:00 AM y 9:00 AM)</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableSlots.filter(s => s.period === 'morning' || s.time === '08:00' || s.time === '09:00').map((slot) => {
+                          const isSelected = selectedTime === slot.time;
+                          const isDisabled = !slot.available;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => setSelectedTime(slot.time)}
+                              className={`py-3 px-3 rounded-xl text-sm font-black transition-all text-center flex flex-col items-center justify-center gap-0.5 ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 ring-2 ring-cyan-400 scale-[1.02]'
+                                  : isDisabled
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 opacity-70'
+                                  : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200 hover:border-blue-400 shadow-sm'
+                              }`}
+                            >
+                              <span className="text-base font-black">{slot.label || slot.time}</span>
+                              <span className={`text-[10px] font-bold ${
+                                isSelected ? 'text-cyan-200' : isDisabled ? 'text-gray-400' : 'text-emerald-600'
+                              }`}>
+                                {slot.isPast ? 'Horario pasado' : slot.isBooked ? 'Ocupado' : 'Disponible'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
 
-                      return (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          disabled={isDisabled}
-                          onClick={() => setSelectedTime(slot.time)}
-                          className={`py-2 px-3 rounded-xl text-sm font-black transition-all text-center ${
-                            isSelected
-                              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 ring-2 ring-cyan-400'
-                              : isDisabled
-                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed line-through opacity-60'
-                              : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200 hover:border-blue-400'
-                          }`}
-                        >
-                          {slot.time}
-                        </button>
-                      );
-                    })}
+                    {/* Jornada Tarde */}
+                    <div className="bg-blue-50/60 border border-blue-200/80 rounded-2xl p-3">
+                      <div className="flex items-center gap-1.5 text-xs font-black text-blue-900 uppercase tracking-wider mb-2">
+                        <Sunset className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Jornada Tarde (2:00 PM y 3:00 PM)</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableSlots.filter(s => s.period === 'afternoon' || s.time === '14:00' || s.time === '15:00').map((slot) => {
+                          const isSelected = selectedTime === slot.time;
+                          const isDisabled = !slot.available;
+                          return (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              disabled={isDisabled}
+                              onClick={() => setSelectedTime(slot.time)}
+                              className={`py-3 px-3 rounded-xl text-sm font-black transition-all text-center flex flex-col items-center justify-center gap-0.5 ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40 ring-2 ring-cyan-400 scale-[1.02]'
+                                  : isDisabled
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 opacity-70'
+                                  : 'bg-white hover:bg-blue-50 text-gray-900 border-2 border-gray-200 hover:border-blue-400 shadow-sm'
+                              }`}
+                            >
+                              <span className="text-base font-black">{slot.label || (slot.time === '14:00' ? '02:00 PM' : '03:00 PM')}</span>
+                              <span className={`text-[10px] font-bold ${
+                                isSelected ? 'text-cyan-200' : isDisabled ? 'text-gray-400' : 'text-emerald-600'
+                              }`}>
+                                {slot.isPast ? 'Horario pasado' : slot.isBooked ? 'Ocupado' : 'Disponible'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

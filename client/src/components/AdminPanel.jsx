@@ -242,7 +242,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
       const data = await res.json();
       setSavingSettings(false);
       if (res.ok) {
-        setSettingsSuccess('¡Configuración de Zipaquirá Enterprise guardada exitosamente!');
+        setSettingsSuccess('¡Configuración de RUFO Precise Detailing guardada exitosamente!');
         setTimeout(() => setSettingsSuccess(''), 4000);
       } else {
         setSettingsError(data.error || 'Error al guardar la configuración');
@@ -1155,7 +1155,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-black text-white tracking-tight">Personalización y Control Total</h3>
-                <p className="text-xs text-gray-400">Modifica los textos, banners, horarios de atención y datos de contacto de Zipaquirá Enterprise.</p>
+                <p className="text-xs text-gray-400">Modifica los textos, banners, horarios de atención y datos de contacto de RUFO Precise Detailing.</p>
               </div>
 
               <button
@@ -1306,9 +1306,18 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
 
             {/* Operating Hours */}
             <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-4">
-              <h4 className="font-extrabold text-white text-base border-b border-blue-900/40 pb-2">
-                3. Horarios de Atención
-              </h4>
+              <div className="flex items-center justify-between border-b border-blue-900/40 pb-2">
+                <h4 className="font-extrabold text-white text-base">
+                  3. Horarios de Atención
+                </h4>
+                <span className="text-[11px] font-bold text-cyan-300 bg-blue-950 px-2.5 py-0.5 rounded-full border border-blue-500/30">
+                  RUFO Detailing: 8:00 AM, 9:00 AM, 2:00 PM, 3:00 PM
+                </span>
+              </div>
+              
+              <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-2xl text-xs text-blue-200">
+                ⚡ <strong>Horarios exclusivos configurados:</strong> Los clientes pueden agendar turnos exclusivamente en la mañana a las <strong>8:00 AM</strong> y <strong>9:00 AM</strong>, y en la tarde a las <strong>2:00 PM</strong> y <strong>3:00 PM</strong>.
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs sm:text-sm">
                 <div>

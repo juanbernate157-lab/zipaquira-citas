@@ -58,16 +58,27 @@ function getBaseUrl(req) {
   return 'https://morning-groups-sydney-pays.trycloudflare.com';
 }
 
+// Horarios de atención exclusivos solicitados por el cliente:
+// Mañana: 08:00 AM y 09:00 AM
+// Tarde: 02:00 PM (14:00) y 03:00 PM (15:00)
+const RUFO_ALLOWED_SLOTS = [
+  { time: '08:00', label: '08:00 AM', period: 'morning', periodLabel: 'Mañana' },
+  { time: '09:00', label: '09:00 AM', period: 'morning', periodLabel: 'Mañana' },
+  { time: '14:00', label: '02:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
+  { time: '15:00', label: '03:00 PM', period: 'afternoon', periodLabel: 'Tarde' },
+];
+const RUFO_ALLOWED_TIMES = RUFO_ALLOWED_SLOTS.map(s => s.time);
+
 // GET available slots for a given date and service duration
 router.get('/available-slots', (req, res) => {
   try {
-    const { date, duration = 30 } = req.query;
+    const { date, duration = 60 } = req.query;
     if (!date) {
       return res.status(400).json({ error: 'La fecha es obligatoria (YYYY-MM-DD)' });
     }
 
     const settings = getSettings();
-    const serviceDuration = Number(duration) || 30;
+    const serviceDuration = Number(duration) || 60;
 
     // Check working days
     let workingDays = [1, 2, 3, 4, 5, 6];
@@ -85,7 +96,7 @@ router.get('/available-slots', (req, res) => {
     if (!workingDays.includes(dayOfWeek)) {
       return res.json({
         available: false,
-        message: 'El establecimiento no atiende citas este día de la semana.',
+        message: 'RUFO Precise Detailing no atiende citas este día de la semana.',
         slots: []
       });
     }
@@ -97,26 +108,18 @@ router.get('/available-slots', (req, res) => {
       WHERE appointment_date = ? AND status != 'cancelled'
     `).all(date);
 
-    // Parse opening and closing times
-    const [openHour, openMin] = (settings.opening_time || '08:00').split(':').map(Number);
-    const [closeHour, closeMin] = (settings.closing_time || '19:00').split(':').map(Number);
-    const interval = Number(settings.slot_interval_minutes) || 30;
-
-    const startMinutes = openHour * 60 + openMin;
-    const endMinutes = closeHour * 60 + closeMin;
-
     const slots = [];
     const now = new Date();
     const isToday = now.toISOString().slice(0, 10) === date;
     const currentMinutesNow = now.getHours() * 60 + now.getMinutes();
 
-    for (let m = startMinutes; m + serviceDuration <= endMinutes; m += interval) {
-      const h = Math.floor(m / 60).toString().padStart(2, '0');
-      const min = (m % 60).toString().padStart(2, '0');
-      const timeStr = `${h}:${min}`;
+    for (const slotDef of RUFO_ALLOWED_SLOTS) {
+      const timeStr = slotDef.time;
+      const [h, min] = timeStr.split(':').map(Number);
+      const m = h * 60 + min;
 
-      // Check if slot has already passed today
-      const isPast = isToday && m <= (currentMinutesNow + 15); // 15 min buffer
+      // Check if slot has already passed today (15 min buffer)
+      const isPast = isToday && m <= (currentMinutesNow + 15);
 
       // Check overlap with existing appointments
       const slotEndMinutes = m + serviceDuration;
@@ -125,7 +128,7 @@ router.get('/available-slots', (req, res) => {
       for (const ex of existing) {
         const [exH, exM] = ex.appointment_time.split(':').map(Number);
         const exStart = exH * 60 + exM;
-        const exEnd = exStart + (Number(ex.service_duration) || 30);
+        const exEnd = exStart + (Number(ex.service_duration) || 60);
 
         // Check if [m, slotEndMinutes] overlaps with [exStart, exEnd]
         if (Math.max(m, exStart) < Math.min(slotEndMinutes, exEnd)) {
@@ -136,6 +139,9 @@ router.get('/available-slots', (req, res) => {
 
       slots.push({
         time: timeStr,
+        label: slotDef.label,
+        period: slotDef.period,
+        periodLabel: slotDef.periodLabel,
         available: !isPast && !isBooked,
         isPast,
         isBooked,
@@ -251,14 +257,34 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'El servicio seleccionado no existe o no está disponible' });
     }
 
-    // Check slot availability
-    const conflict = db.prepare(`
-      SELECT id FROM appointments 
-      WHERE appointment_date = ? AND appointment_time = ? AND status != 'cancelled'
-    `).get(appointment_date, appointment_time);
+    // Validar que el horario sea estrictamente uno de los autorizados por RUFO Precise Detailing
+    if (!RUFO_ALLOWED_TIMES.includes(appointment_time)) {
+      return res.status(400).json({
+        error: 'Horario no permitido. RUFO Precise Detailing atiende exclusivamente a las 8:00 AM, 9:00 AM, 2:00 PM y 3:00 PM.'
+      });
+    }
 
-    if (conflict) {
-      return res.status(409).json({ error: 'Este horario acaba de ser ocupado. Por favor selecciona otro horario disponible.' });
+    // Check slot availability and time conflicts
+    const serviceDuration = Number(service.duration_minutes) || 60;
+    const [h, min] = appointment_time.split(':').map(Number);
+    const startM = h * 60 + min;
+    const endM = startM + serviceDuration;
+
+    const existingAppointments = db.prepare(`
+      SELECT appointment_time, service_duration 
+      FROM appointments 
+      WHERE appointment_date = ? AND status != 'cancelled'
+    `).all(appointment_date);
+
+    const hasConflict = existingAppointments.some(ex => {
+      const [exH, exM] = ex.appointment_time.split(':').map(Number);
+      const exStart = exH * 60 + exM;
+      const exEnd = exStart + (Number(ex.service_duration) || 60);
+      return Math.max(startM, exStart) < Math.min(endM, exEnd);
+    });
+
+    if (hasConflict) {
+      return res.status(409).json({ error: 'Este horario acaba de ser ocupado o se cruza con otra cita. Por favor selecciona otro turno.' });
     }
 
     // Generate unique code
@@ -339,14 +365,34 @@ router.put('/:code/reschedule', async (req, res) => {
       return res.status(400).json({ error: 'Esta cita fue cancelada previamente. Debes agendar una nueva cita.' });
     }
 
-    // Check if new slot is taken by another appointment
-    const conflict = db.prepare(`
-      SELECT id FROM appointments 
-      WHERE appointment_date = ? AND appointment_time = ? AND id != ? AND status != 'cancelled'
-    `).get(new_date, new_time, app.id);
+    // Validar que el nuevo horario sea estrictamente uno de los autorizados por RUFO Precise Detailing
+    if (!RUFO_ALLOWED_TIMES.includes(new_time)) {
+      return res.status(400).json({
+        error: 'Horario no permitido. RUFO Precise Detailing atiende exclusivamente a las 8:00 AM, 9:00 AM, 2:00 PM y 3:00 PM.'
+      });
+    }
 
-    if (conflict) {
-      return res.status(409).json({ error: 'El horario seleccionado ya no está disponible. Por favor elige otro.' });
+    // Check if new slot conflicts or overlaps with another active appointment
+    const serviceDuration = Number(app.service_duration) || 60;
+    const [h, min] = new_time.split(':').map(Number);
+    const startM = h * 60 + min;
+    const endM = startM + serviceDuration;
+
+    const otherAppointments = db.prepare(`
+      SELECT appointment_time, service_duration 
+      FROM appointments 
+      WHERE appointment_date = ? AND id != ? AND status != 'cancelled'
+    `).all(new_date, app.id);
+
+    const hasConflict = otherAppointments.some(ex => {
+      const [exH, exM] = ex.appointment_time.split(':').map(Number);
+      const exStart = exH * 60 + exM;
+      const exEnd = exStart + (Number(ex.service_duration) || 60);
+      return Math.max(startM, exStart) < Math.min(endM, exEnd);
+    });
+
+    if (hasConflict) {
+      return res.status(409).json({ error: 'El horario seleccionado ya no está disponible o se cruza con otra cita. Por favor elige otro.' });
     }
 
     const oldDate = app.appointment_date;

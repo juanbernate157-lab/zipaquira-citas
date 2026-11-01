@@ -52,7 +52,7 @@ app.get('/api/network-ip', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', business: 'Zipaquirá Enterprise', time: new Date().toISOString() });
+  res.json({ status: 'ok', business: 'RUFO Precise Detailing', time: new Date().toISOString() });
 });
 
 // Serve frontend build if available (production mode)
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
   }
   res.status(200).send(`
     <div style="font-family: sans-serif; text-align: center; padding: 50px; background: #05050a; color: #fff;">
-      <h2 style="color: #3b82f6;">Zipaquirá Enterprise - Servidor Activo</h2>
+      <h2 style="color: #3b82f6;">RUFO Precise Detailing - Servidor Activo</h2>
       <p>Servidor listo en el puerto ${PORT}. Accede a <a href="/citas" style="color: #60a5fa;">localhost:${PORT}/citas</a></p>
     </div>
   `);
@@ -81,7 +81,7 @@ app.use((req, res, next) => {
 // Start server
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
-  console.log(`🏎️ ZIPAQUIRÁ ENTERPRISE - SERVIDOR ACTIVO`);
+  console.log(`🏎️ RUFO PRECISE DETAILING - SERVIDOR ACTIVO`);
   console.log(`🌐 Acceso Principal: http://localhost:${PORT}/citas`);
   console.log(`🔐 Acceso Admin:     http://localhost:${PORT}/#admin`);
   console.log(`📡 API Endpoints:    http://localhost:${PORT}/api`);
