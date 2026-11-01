@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: zipaquira-enterprise
+    runtime: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22.11.0
