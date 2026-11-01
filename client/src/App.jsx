@@ -277,12 +277,20 @@ export default function App() {
               <h4 className="font-black text-white uppercase tracking-wider text-[11px]">Ubicación</h4>
               <p className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
-                <span>{settings?.address || 'Calle 5 # 10-25'}, {settings?.city || 'Zipaquirá, Colombia'}</span>
+                <span className="text-gray-200">
+                  {settings?.address ? (
+                    settings?.city && !settings.address.toLowerCase().includes(settings.city.toLowerCase())
+                      ? `${settings.address}, ${settings.city}`
+                      : settings.address
+                  ) : (
+                    settings?.city || 'Zipaquirá, Colombia'
+                  )}
+                </span>
               </p>
               <h4 className="font-black text-white uppercase tracking-wider text-[11px] pt-3">Horario de Atención</h4>
               <p className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span>8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM</span>
+                <span className="text-gray-200">{settings?.business_hours_text || '8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM'}</span>
               </p>
             </div>
 

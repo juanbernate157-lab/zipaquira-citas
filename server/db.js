@@ -120,6 +120,12 @@ function initDb() {
     );
   `);
 
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN business_hours_text TEXT DEFAULT '8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM';`);
+  } catch (e) {
+    // Column already exists
+  }
+
   // Seed default schedule slots if empty
   const slotCount = db.prepare('SELECT COUNT(*) as count FROM schedule_slots').get();
   if (!slotCount || slotCount.count === 0) {

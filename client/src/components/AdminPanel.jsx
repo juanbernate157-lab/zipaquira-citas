@@ -1692,9 +1692,10 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
                 <div>
-                  <label className="block font-bold text-gray-300 mb-1">Dirección</label>
+                  <label className="block font-bold text-gray-300 mb-1">Dirección del Local / Taller</label>
                   <input
                     type="text"
+                    placeholder="Ej: Carrera 10 # 5-20 (o dejar vacío)"
                     value={settings.address || ''}
                     onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white"
@@ -1704,11 +1705,27 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                   <label className="block font-bold text-gray-300 mb-1">Ciudad</label>
                   <input
                     type="text"
+                    placeholder="Ej: Zipaquirá, Colombia"
                     value={settings.city || ''}
                     onChange={(e) => setSettings({ ...settings, city: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white"
                   />
                 </div>
+              </div>
+
+              {/* Live Location Preview */}
+              <div className="p-3 bg-black/30 rounded-2xl border border-blue-900/30 flex items-center gap-2 text-xs text-gray-300">
+                <MapPin className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                <span>
+                  <strong>Vista previa de Ubicación:</strong>{' '}
+                  {settings.address ? (
+                    settings.city && !settings.address.toLowerCase().includes(settings.city.toLowerCase())
+                      ? `${settings.address}, ${settings.city}`
+                      : settings.address
+                  ) : (
+                    settings.city || 'Zipaquirá, Colombia'
+                  )}
+                </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
@@ -1746,7 +1763,23 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
               </div>
               
               <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-2xl text-xs text-blue-200">
-                ⚡ <strong>Horarios exclusivos configurados:</strong> Los clientes pueden agendar turnos exclusivamente en la mañana a las <strong>8:00 AM</strong> y <strong>9:00 AM</strong>, y en la tarde a las <strong>2:00 PM</strong> y <strong>3:00 PM</strong>.
+                ⚡ <strong>Horarios exclusivos configurados:</strong> Los clientes pueden agendar turnos en la mañana a las <strong>8:00 AM</strong> y <strong>9:00 AM</strong>, y en la tarde a las <strong>2:00 PM</strong> y <strong>3:00 PM</strong> (puedes activar o cancelar turnos en la pestaña <em>Horarios & Cancelaciones</em>).
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-300 mb-1">
+                  Texto Visible del Horario de Atención en la Web
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej: 8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM"
+                  value={settings.business_hours_text || ''}
+                  onChange={(e) => setSettings({ ...settings, business_hours_text: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white font-bold text-sm"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Este es el texto exacto que ven tus clientes en el pie de página bajo <strong>"Horario de Atención"</strong>.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs sm:text-sm">

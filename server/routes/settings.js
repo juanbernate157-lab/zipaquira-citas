@@ -30,6 +30,7 @@ router.get('/', (req, res) => {
       closing_time: s.closing_time,
       slot_interval_minutes: s.slot_interval_minutes,
       working_days: s.working_days,
+      business_hours_text: s.business_hours_text || '8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM',
     };
     res.json(publicSettings);
   } catch (error) {
@@ -82,7 +83,7 @@ router.put('/', (req, res) => {
       'currency_symbol', 'currency_code', 'phone', 'whatsapp',
       'contact_email', 'admin_notification_email', 'address', 'city',
       'instagram', 'facebook', 'opening_time', 'closing_time',
-      'slot_interval_minutes', 'working_days', 'admin_password',
+      'slot_interval_minutes', 'working_days', 'business_hours_text', 'admin_password',
       'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
       'smtp_secure', 'smtp_enabled'
     ];
