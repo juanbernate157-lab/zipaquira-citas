@@ -13,17 +13,11 @@ export default function Navbar({ settings, onOpenShare, onOpenAdmin, onViewMyBoo
           className="flex items-center gap-3.5 cursor-pointer group" 
           onClick={() => isAdminView ? onExitAdmin() : window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          {settings?.logo_url ? (
-            <img 
-              src={settings.logo_url} 
-              alt={brandName} 
-              className="h-11 w-11 object-cover rounded-2xl shadow-lg border border-blue-500/40 group-hover:border-blue-400 transition" 
-            />
-          ) : (
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-700 via-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-blue-600/40 group-hover:scale-105 transition-transform">
-              <Zap className="w-6 h-6 text-white fill-white" />
-            </div>
-          )}
+          <img 
+            src={settings?.logo_url || '/rufo-logo.png'} 
+            alt={brandName} 
+            className="h-12 w-auto max-w-[75px] object-contain drop-shadow-[0_0_12px_rgba(6,182,212,0.6)] group-hover:scale-105 transition-transform" 
+          />
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-blue-400 transition-colors">

@@ -12,12 +12,18 @@ export default function Hero({ settings, searchTerm, setSearchTerm, selectedCate
 
       <div className="max-w-4xl mx-auto text-center">
         
-        {/* Top Tagline Badge */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-blue-300 text-xs sm:text-sm font-bold shadow-md shadow-blue-900/30 mb-6">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="text-white font-extrabold">{brandName}</span>
-          <span className="text-blue-400">•</span>
-          <span>{settings?.tagline || 'Innovación & Excelencia en Cada Servicio'}</span>
+        {/* Rufo Precise Detailing Top Emblem */}
+        <div className="flex flex-col items-center justify-center mb-6">
+          <img 
+            src="/rufo-logo.png" 
+            alt="RUFO Precise Detailing" 
+            className="h-24 sm:h-28 w-auto object-contain drop-shadow-[0_0_25px_rgba(6,182,212,0.7)] hover:scale-105 transition-transform" 
+          />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-blue-300 text-xs sm:text-sm font-bold shadow-md shadow-blue-900/30 mt-3">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            <span className="text-white font-extrabold">{brandName}</span>
+            <span className="text-cyan-400 font-mono">• RUFO Precise Detailing</span>
+          </div>
         </div>
 
         {/* Main Title - Explicitly "Reserva tu cita" as requested by user */}

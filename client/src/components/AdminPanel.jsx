@@ -279,13 +279,15 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
         <div className="relative w-full max-w-5xl bg-[#090d1c]/90 backdrop-blur-2xl rounded-3xl border border-blue-500/30 shadow-[0_0_80px_rgba(37,99,235,0.25)] overflow-hidden flex flex-col lg:flex-row">
           
           {/* Top Brand Tag inside Window */}
-          <div className="absolute top-6 left-8 flex items-center gap-2.5 z-20">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-500/50">
-              <Zap className="w-4 h-4 text-white fill-white" />
-            </div>
+          <div className="absolute top-5 left-6 sm:left-8 flex items-center gap-3 z-20">
+            <img 
+              src="/rufo-logo.png" 
+              alt="RUFO Precise Detailing" 
+              className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]" 
+            />
             <div>
               <span className="font-black text-sm tracking-wider text-white">ZIPAQUIRÁ ENTERPRISE</span>
-              <span className="block text-[10px] text-cyan-400 font-mono">ADMIN CONTROL CENTER</span>
+              <span className="block text-[10px] text-cyan-400 font-mono font-bold tracking-widest">RUFO PRECISE DETAILING</span>
             </div>
           </div>
 
@@ -302,12 +304,14 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
           <div className="w-full lg:w-5/12 p-8 sm:p-12 pt-24 sm:pt-28 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-blue-900/30">
             
             <div className="space-y-6">
-              {/* User Avatar Circle (matching image #2) */}
-              <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-[2px] shadow-[0_0_25px_rgba(59,130,246,0.5)]">
-                <div className="w-full h-full rounded-full bg-[#080c1b] flex items-center justify-center">
-                  <User className="w-9 h-9 text-cyan-300" />
+              {/* Rufo Detailing Emblem Badge Avatar */}
+              <div className="relative w-24 h-24 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 p-[2px] shadow-[0_0_30px_rgba(59,130,246,0.6)]">
+                <div className="w-full h-full rounded-2xl bg-[#080c1b] flex items-center justify-center p-2 overflow-hidden">
+                  <img src="/rufo-logo.png" alt="Rufo Detailing" className="w-full h-full object-contain" />
                 </div>
-                <div className="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-green-500 border-2 border-[#080c1b]" />
+                <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 border-2 border-[#080c1b] flex items-center justify-center" title="Online">
+                  <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                </div>
               </div>
 
               <div>
@@ -413,21 +417,28 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
               </svg>
             </div>
 
-            {/* Glowing Big Typography (matching image #2: "Welcome Back.") */}
-            <div className="relative z-10 pt-16 sm:pt-14">
-              <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm inline-flex items-center gap-1.5 mb-3">
-                <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
-                <span>EXECUTIVE EDITION</span>
-              </span>
+            {/* Glowing Big Typography & Detailing Badge */}
+            <div className="relative z-10 pt-14 sm:pt-12">
+              <div className="flex items-center gap-3 mb-3">
+                <img 
+                  src="/rufo-logo.png" 
+                  alt="RUFO Precise Detailing" 
+                  className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.8)] hover:scale-105 transition-transform" 
+                />
+                <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm inline-flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+                  <span>PRECISE DETAILING</span>
+                </span>
+              </div>
 
-              <h2 className="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none">
+              <h2 className="text-4xl sm:text-5xl font-black text-white tracking-tight leading-none">
                 Welcome <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-indigo-300">
                   Back.
                 </span>
               </h2>
               <p className="text-xs sm:text-sm text-gray-300 max-w-sm mt-3 leading-relaxed">
-                Plataforma de gestión de citas y control total de <strong>Zipaquirá Enterprise</strong>.
+                Plataforma de gestión de citas y control total de <strong>Zipaquirá Enterprise • RUFO Precise Detailing</strong>.
               </p>
             </div>
 
@@ -530,15 +541,17 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
       <div className="bg-[#080c1a] text-white border-b border-blue-900/40 sticky top-0 z-30 shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-blue-500/40">
-              ZE
-            </div>
+            <img 
+              src="/rufo-logo.png" 
+              alt="RUFO" 
+              className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" 
+            />
             <div>
               <h1 className="font-extrabold text-sm sm:text-base leading-tight flex items-center gap-2">
                 <span>{brandName}</span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-cyan-300 border border-blue-500/30">Admin Pro</span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-500/20 text-cyan-300 border border-blue-500/30">Rufo Detailing</span>
               </h1>
-              <p className="text-[11px] text-gray-400">Total control de citas, servicios y diseño</p>
+              <p className="text-[11px] text-gray-400">Control de citas, servicios y diseño</p>
             </div>
           </div>
 

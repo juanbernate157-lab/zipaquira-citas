@@ -8,14 +8,14 @@ export default function ServiceCard({ service, currencySymbol = '$', currencyCod
     <div className="group bg-[#0b0f1e] rounded-3xl overflow-hidden border border-blue-900/30 hover:border-blue-500/60 shadow-lg hover:shadow-2xl hover:shadow-blue-600/20 transition-all duration-300 flex flex-col justify-between">
       
       {/* Top Image & Badge Container */}
-      <div className="relative h-52 w-full overflow-hidden bg-gray-900">
+      <div className="relative h-52 w-full overflow-hidden bg-[#060914] flex items-center justify-center">
         <img
-          src={service.image_url || 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80'}
+          src={service.image_url || '/rufo-logo.png'}
           alt={service.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out opacity-90 group-hover:opacity-100"
+          className={`w-full h-full ${service.image_url?.includes('rufo-logo') || !service.image_url ? 'object-contain p-4' : 'object-cover'} group-hover:scale-105 transition-transform duration-500 ease-out`}
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f1e] via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0f1e] via-black/20 to-transparent pointer-events-none" />
 
         {/* Category Pill Tag */}
         <span className="absolute top-3 left-3 bg-[#070a14]/90 backdrop-blur-md text-cyan-300 text-xs font-black px-3 py-1 rounded-full border border-blue-500/30 shadow-md">
