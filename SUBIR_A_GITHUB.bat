@@ -57,15 +57,14 @@ echo 3. Dejalo Publico o Privado y haz clic en "Create repository"
 echo 4. Copia el enlace HTTPS (ej: https://github.com/tu-usuario/zipaquira-citas.git)
 echo =========================================================================
 echo.
-set /p REPO_URL="Pega aqui la URL de tu repositorio de GitHub y presiona Enter: "
+set DEFAULT_URL=https://github.com/juanbernate157-lab/zipaquira-citas.git
+echo URL por defecto: %DEFAULT_URL%
+echo.
+set /p REPO_URL="Pega la URL de tu repositorio (o presiona ENTER para usar la de por defecto): "
 
 if "%REPO_URL%"=="" (
-    echo.
-    echo [AVISO] No ingresaste ninguna URL. Tus archivos ya quedaron guardados
-    echo localmente en Git. Puedes ejecutar este script de nuevo cuando tengas el enlace.
-    echo.
-    pause
-    exit /b 0
+    set REPO_URL=%DEFAULT_URL%
+    echo Usando: %DEFAULT_URL%
 )
 
 echo.
