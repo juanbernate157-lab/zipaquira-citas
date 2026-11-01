@@ -45,6 +45,10 @@ router.post('/test', async (req, res) => {
       type: 'test',
     });
 
+    if (!result.success) {
+      return res.status(400).json({ error: result.error || 'Fallo en la conexión SMTP con Google' });
+    }
+
     res.json({
       success: true,
       message: result.mode === 'smtp' ? `Correo de prueba enviado a ${targetEmail} vía SMTP` : `Correo simulado registrado en historial para ${targetEmail}`,

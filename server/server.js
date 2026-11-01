@@ -3,6 +3,12 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const dns = require('node:dns');
+
+// Enforce IPv4 resolution first on cloud containers (prevents Render IPv6 SMTP timeout)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 const { startScheduler } = require('./schedulerService');
 
 const servicesRouter = require('./routes/services');

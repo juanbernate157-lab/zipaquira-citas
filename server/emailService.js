@@ -1,5 +1,11 @@
 const nodemailer = require('nodemailer');
+const dns = require('node:dns');
 const { db, getSettings } = require('./db');
+
+// Enforce IPv4 resolution first on cloud containers (prevents Render IPv6 SMTP timeout)
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 // Helper to format Date to UTC iCalendar string (YYYYMMDDTHHMMSSZ)
 function formatToICSDate(date) {
@@ -86,15 +92,39 @@ function logEmail({ to, subject, type, code, html, status, details }) {
 // Create Nodemailer transporter based on current settings
 function getTransporter() {
   const settings = getSettings();
-  if (settings.smtp_enabled && settings.smtp_host && settings.smtp_user) {
+  if (settings.smtp_enabled && (settings.smtp_host || settings.smtp_user)) {
+    const rawPass = settings.smtp_pass ? String(settings.smtp_pass).replace(/\s+/g, '') : '';
+    const rawUser = settings.smtp_user ? String(settings.smtp_user).trim() : '';
+    const host = settings.smtp_host ? String(settings.smtp_host).trim().toLowerCase() : '';
+    const isGmail = host.includes('gmail') || rawUser.includes('@gmail.com');
+
+    if (isGmail) {
+      return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: rawUser,
+          pass: rawPass,
+        },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 20000,
+      });
+    }
+
     return nodemailer.createTransport({
-      host: settings.smtp_host,
-      port: settings.smtp_port || 587,
-      secure: Boolean(settings.smtp_secure || settings.smtp_port === 465),
+      host: settings.smtp_host ? settings.smtp_host.trim() : 'smtp.gmail.com',
+      port: Number(settings.smtp_port) || 587,
+      secure: Number(settings.smtp_port) === 465,
       auth: {
-        user: settings.smtp_user,
-        pass: settings.smtp_pass,
+        user: rawUser,
+        pass: rawPass,
       },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
     });
   }
   return null;
