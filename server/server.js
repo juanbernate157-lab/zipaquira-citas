@@ -82,7 +82,17 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
 
   // Start background scheduler for 30-min reminders
-  const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+  let lanIp = 'localhost';
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        lanIp = net.address;
+        break;
+      }
+    }
+  }
+  const baseUrl = process.env.RENDER_EXTERNAL_URL || process.env.PUBLIC_URL || process.env.BASE_URL || `http://${lanIp}:${PORT}`;
   startScheduler(baseUrl);
 });
 

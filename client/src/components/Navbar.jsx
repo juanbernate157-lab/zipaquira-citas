@@ -39,14 +39,15 @@ export default function Navbar({ settings, onOpenShare, onOpenAdmin, onViewMyBoo
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3">
           
-          {/* Consult my booking button */}
+          {/* Consult my booking button (visible on mobile and desktop) */}
           {!isAdminView && (
             <button
               onClick={onViewMyBooking}
-              className="hidden md:inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-gray-300 hover:text-white hover:bg-blue-950/60 rounded-full transition-colors border border-blue-900/50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-gray-200 hover:text-white bg-blue-950/70 hover:bg-blue-900/80 rounded-full transition-colors border border-blue-500/40 shadow-sm cursor-pointer"
+              title="Consultar, reagendar o cancelar cita"
             >
-              <Calendar className="w-4 h-4 text-blue-400" />
-              <span>Consultar Mi Cita</span>
+              <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Mi Cita</span>
             </button>
           )}
 

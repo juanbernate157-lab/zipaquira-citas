@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const os = require('os');
 const { db, getSettings } = require('../db');
 const {
   sendClientBookingConfirmation,
@@ -22,16 +23,41 @@ function generateBookingCode() {
   return code;
 }
 
-// Helper to determine base URL
-function getBaseUrl(req) {
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  const host = req.headers['x-forwarded-host'] || req.get('host') || 'localhost:3000';
-  // If request came from backend port 5000 in dev, point to client port 3000
-  let cleanHost = host;
-  if (cleanHost.includes(':5000')) {
-    cleanHost = cleanHost.replace(':5000', ':3000');
+// Helper to get local network IP
+function getLanIp() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        return net.address;
+      }
+    }
   }
-  return `${protocol}://${cleanHost}`;
+  return 'localhost';
+}
+
+// Helper to determine base URL (never send localhost in emails so phones can open it)
+function getBaseUrl(req) {
+  // If running in Render or cloud host:
+  if (process.env.RENDER_EXTERNAL_URL) {
+    return process.env.RENDER_EXTERNAL_URL;
+  }
+  if (process.env.PUBLIC_URL) {
+    return process.env.PUBLIC_URL;
+  }
+
+  const host = req.headers['x-forwarded-host'] || req.get('host') || '';
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+
+  // If request arrived with a real domain (e.g. zipaquira-citas.onrender.com or cloudflare)
+  if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+    return `${protocol}://${host}`;
+  }
+
+  // When testing locally, use LAN IP so mobile phones connected to Wi-Fi can open the link!
+  const lanIp = getLanIp();
+  const port = process.env.PORT || 5000;
+  return `http://${lanIp}:${port}`;
 }
 
 // GET available slots for a given date and service duration
