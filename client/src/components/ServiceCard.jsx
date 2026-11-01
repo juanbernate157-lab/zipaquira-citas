@@ -47,12 +47,23 @@ export default function ServiceCard({ service, currencySymbol = '$', currencyCod
       {/* Card Details */}
       <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-lg font-black text-white group-hover:text-blue-400 transition-colors line-clamp-1 mb-2">
+          <h3 className="text-lg sm:text-xl font-black text-white group-hover:text-cyan-400 transition-colors mb-2">
             {service.name}
           </h3>
-          <p className="text-xs sm:text-sm text-gray-400 line-clamp-2 leading-relaxed mb-5">
-            {service.description || 'Atención personalizada de la más alta calidad con garantía de satisfacción.'}
-          </p>
+
+          {/* Detailing Features List */}
+          <div className="space-y-1.5 mb-5 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-900 pr-1">
+            {(service.description || '')
+              .split('•')
+              .map((f) => f.trim())
+              .filter(Boolean)
+              .map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-gray-300 leading-snug">
+                  <span className="text-cyan-400 font-black flex-shrink-0 mt-0.5">✓</span>
+                  <span>{feature}</span>
+                </div>
+              ))}
+          </div>
         </div>
 
         {/* Price & Action Row */}
@@ -66,7 +77,7 @@ export default function ServiceCard({ service, currencySymbol = '$', currencyCod
 
           <button
             onClick={() => onSelect(service)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-blue-600/30 transition-all group-hover:scale-105"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-xs sm:text-sm shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 active:scale-95 cursor-pointer"
           >
             <Calendar className="w-4 h-4" />
             <span>Agendar Cita</span>

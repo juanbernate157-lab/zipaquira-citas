@@ -20,11 +20,11 @@ function initDb() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
-      business_name TEXT NOT NULL DEFAULT 'Zipaquirá Enterprise',
+      business_name TEXT NOT NULL DEFAULT 'RUFO Precise Detailing',
       hero_title TEXT NOT NULL DEFAULT 'Reserva tu cita',
-      hero_subtitle TEXT NOT NULL DEFAULT 'Agenda tus servicios de manera rápida, cómoda y segura con los mejores profesionales.',
-      tagline TEXT NOT NULL DEFAULT 'Innovación y Excelencia en Cada Servicio',
-      logo_url TEXT DEFAULT '',
+      hero_subtitle TEXT NOT NULL DEFAULT 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.',
+      tagline TEXT NOT NULL DEFAULT 'Each Precise Detail Counts',
+      logo_url TEXT DEFAULT '/rufo-logo.png',
       banner_url TEXT DEFAULT '',
       primary_color TEXT DEFAULT '#2563eb',
       accent_color TEXT DEFAULT '#3b82f6',
@@ -106,16 +106,18 @@ function initDb() {
   const countRow = db.prepare('SELECT COUNT(*) as count FROM settings').get();
   if (!countRow || countRow.count === 0) {
     db.prepare(`
-      INSERT INTO settings (id, business_name, hero_title, hero_subtitle, primary_color, accent_color, admin_notification_email, address, city)
-      VALUES (1, 'Zipaquirá Enterprise', 'Reserva tu cita', 'Agenda tus servicios de manera rápida, cómoda y segura con los mejores profesionales.', '#2563eb', '#3b82f6', 'admin@zipaquiraenterprise.com', 'Calle 5 # 10-25', 'Zipaquirá, Colombia')
+      INSERT INTO settings (id, business_name, hero_title, hero_subtitle, tagline, logo_url, primary_color, accent_color, admin_notification_email, address, city)
+      VALUES (1, 'RUFO Precise Detailing', 'Reserva tu cita', 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.', 'Each Precise Detail Counts', '/rufo-logo.png', '#2563eb', '#3b82f6', 'juanbernate157@gmail.com', 'Calle 5 # 10-25', 'Zipaquirá, Colombia')
     `).run();
   } else {
     // Update existing row to user requested branding
     db.prepare(`
       UPDATE settings 
-      SET business_name = 'Zipaquirá Enterprise',
+      SET business_name = 'RUFO Precise Detailing',
           hero_title = 'Reserva tu cita',
-          hero_subtitle = 'Agenda tus servicios de manera rápida, cómoda y segura con los mejores profesionales.',
+          hero_subtitle = 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.',
+          tagline = 'Each Precise Detail Counts',
+          logo_url = '/rufo-logo.png',
           primary_color = '#2563eb',
           accent_color = '#3b82f6',
           city = 'Zipaquirá, Colombia'

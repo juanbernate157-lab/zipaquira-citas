@@ -286,8 +286,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
               className="h-12 w-auto object-contain drop-shadow-[0_0_15px_rgba(6,182,212,0.6)]" 
             />
             <div>
-              <span className="font-black text-sm tracking-wider text-white">ZIPAQUIRÁ ENTERPRISE</span>
-              <span className="block text-[10px] text-cyan-400 font-mono font-bold tracking-widest">RUFO PRECISE DETAILING</span>
+              <span className="font-black text-sm tracking-wider text-white">RUFO PRECISE DETAILING</span>
+              <span className="block text-[10px] text-cyan-400 font-mono font-bold tracking-widest">EACH PRECISE DETAIL COUNTS</span>
             </div>
           </div>
 
@@ -373,7 +373,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                     />
                     <span>Remember me</span>
                   </label>
-                  <span className="text-[11px] text-blue-400">Zipaquirá Security</span>
+                  <span className="text-[11px] text-cyan-400 font-bold">RUFO Security</span>
                 </div>
 
                 {/* Glowing Pill Login Button (matching image #2 style) */}
@@ -390,8 +390,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
             </div>
 
             <div className="mt-8 pt-4 border-t border-blue-900/30 flex items-center justify-between text-[11px] text-gray-500">
-              <span>Zipaquirá Enterprise © 2026</span>
-              <span className="text-cyan-400 font-mono">localhost:citas</span>
+              <span>RUFO Precise Detailing © 2026</span>
+              <span className="text-cyan-400 font-mono">citas</span>
             </div>
 
           </div>
@@ -438,7 +438,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                 </span>
               </h2>
               <p className="text-xs sm:text-sm text-gray-300 max-w-sm mt-3 leading-relaxed">
-                Plataforma de gestión de citas y control total de <strong>Zipaquirá Enterprise • RUFO Precise Detailing</strong>.
+                Plataforma de gestión de citas y control total de <strong>RUFO Precise Detailing</strong>.
               </p>
             </div>
 
@@ -511,7 +511,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                 <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
                 <span>Lamborghini Huracán V10 Active</span>
               </span>
-              <span className="text-cyan-400 font-mono font-bold">Zipaquirá Enterprise Edition</span>
+              <span className="text-cyan-400 font-mono font-bold">RUFO Precise Detailing</span>
             </div>
 
           </div>
@@ -532,7 +532,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
     cancelled: { text: 'Cancelada', bg: 'bg-red-500/20 text-red-400 border-red-500/30' },
   };
 
-  const brandName = settings.business_name || 'Zipaquirá Enterprise';
+  const brandName = settings.business_name || 'RUFO Precise Detailing';
 
   return (
     <div className="min-h-screen bg-[#050711] text-gray-100 pb-20">

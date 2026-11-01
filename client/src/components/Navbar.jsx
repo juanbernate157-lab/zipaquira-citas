@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, QrCode, Shield, MapPin, Zap, Sparkles } from 'lucide-react';
 
 export default function Navbar({ settings, onOpenShare, onOpenAdmin, onViewMyBooking, isAdminView, onExitAdmin }) {
-  const brandName = settings?.business_name || 'Zipaquirá Enterprise';
+  const brandName = settings?.business_name || 'RUFO Precise Detailing';
 
   return (
     <header className="sticky top-0 z-40 bg-[#070a14]/90 backdrop-blur-xl border-b border-blue-900/40 shadow-lg shadow-black/50 transition-all">
@@ -20,18 +20,18 @@ export default function Navbar({ settings, onOpenShare, onOpenAdmin, onViewMyBoo
           />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-blue-400 transition-colors">
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-cyan-400 transition-colors">
                 {brandName}
               </h1>
-              <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                PRO
+              <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                VIP
               </span>
             </div>
             <p className="text-xs font-medium text-gray-400 hidden sm:flex items-center gap-1.5 mt-0.5">
-              <MapPin className="w-3.5 h-3.5 text-blue-400" />
+              <MapPin className="w-3.5 h-3.5 text-cyan-400" />
               <span>{settings?.city || 'Zipaquirá, Colombia'}</span>
               <span className="text-gray-600">•</span>
-              <span className="text-blue-400 font-mono text-[11px]">localhost:citas</span>
+              <span className="text-cyan-400 font-bold tracking-wide">Each Precise Detail Counts</span>
             </p>
           </div>
         </div>

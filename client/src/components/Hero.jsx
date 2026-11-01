@@ -2,7 +2,7 @@ import React from 'react';
 import { Search, MapPin, Calendar, Sparkles, QrCode, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function Hero({ settings, searchTerm, setSearchTerm, selectedCategory, onSelectCategory, categories, onOpenShare }) {
-  const brandName = settings?.business_name || 'Zipaquirá Enterprise';
+  const brandName = settings?.business_name || 'RUFO Precise Detailing';
 
   return (
     <div className="relative overflow-hidden zipaquira-hero-gradient pt-12 pb-16 px-4 sm:px-6 lg:px-8 border-b border-blue-950/60">
@@ -22,7 +22,7 @@ export default function Hero({ settings, searchTerm, setSearchTerm, selectedCate
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-950/80 border border-blue-500/40 text-blue-300 text-xs sm:text-sm font-bold shadow-md shadow-blue-900/30 mt-3">
             <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
             <span className="text-white font-extrabold">{brandName}</span>
-            <span className="text-cyan-400 font-mono">• RUFO Precise Detailing</span>
+            <span className="text-cyan-400 font-mono">• {settings?.tagline || 'Each Precise Detail Counts'}</span>
           </div>
         </div>
 

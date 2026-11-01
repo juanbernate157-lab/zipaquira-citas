@@ -84,7 +84,7 @@ export default function ShareQRModal({ settings, onClose }) {
             </div>
             <div>
               <h2 className="text-base font-black text-white">Código QR para Celulares</h2>
-              <p className="text-[11px] text-cyan-300 font-mono font-bold">Zipaquirá Enterprise</p>
+              <p className="text-[11px] text-cyan-300 font-mono font-bold">RUFO Precise Detailing</p>
             </div>
           </div>
           <button
@@ -124,7 +124,7 @@ export default function ShareQRModal({ settings, onClose }) {
               bgColor="#ffffff"
             />
             <div className="text-[11px] font-black font-mono text-gray-900 tracking-wider mt-1">
-              ZIPAQUIRÁ ENTERPRISE
+              RUFO PRECISE DETAILING
             </div>
           </div>
 

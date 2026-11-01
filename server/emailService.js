@@ -20,7 +20,7 @@ function createICSContent(appointment, settings) {
   const endICS = formatToICSDate(endDate);
   const nowICS = formatToICSDate(new Date());
 
-  const businessName = settings?.business_name || 'Zipaquirá Enterprise';
+  const businessName = settings?.business_name || 'RUFO Precise Detailing';
   const address = `${settings?.address || 'Calle 5 # 10-25'}, ${settings?.city || 'Zipaquirá, Colombia'}`;
   const summary = `Cita: ${appointment.service_name} - ${businessName}`;
   const description = `Servicio: ${appointment.service_name}\\nCliente: ${appointment.client_name}\\nTeléfono: ${appointment.client_phone}\\nCódigo de Cita: ${appointment.code}\\nValor: $${Number(appointment.service_price).toLocaleString()} COP\\nLugar: ${address}\\n\\n* Recordatorio programado 30 minutos antes.`;
@@ -28,11 +28,11 @@ function createICSContent(appointment, settings) {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Zipaquira Enterprise//Agendamiento Citas//ES',
+    'PRODID:-//RUFO Precise Detailing//Agendamiento Citas//ES',
     'CALSCALE:GREGORIAN',
     'METHOD:REQUEST',
     'BEGIN:VEVENT',
-    `UID:cita-${appointment.code}@zipaquiraenterprise.com`,
+    `UID:cita-${appointment.code}@rufodetailing.com`,
     `DTSTAMP:${nowICS}`,
     `DTSTART:${startICS}`,
     `DTEND:${endICS}`,
@@ -44,7 +44,7 @@ function createICSContent(appointment, settings) {
     'BEGIN:VALARM',
     'TRIGGER:-PT30M',
     'ACTION:DISPLAY',
-    `DESCRIPTION:Recordatorio: Tu cita para ${appointment.service_name} en Zipaquirá Enterprise inicia en 30 minutos`,
+    `DESCRIPTION:Recordatorio: Tu cita para ${appointment.service_name} en RUFO Precise Detailing inicia en 30 minutos`,
     'END:VALARM',
     'END:VEVENT',
     'END:VCALENDAR'
