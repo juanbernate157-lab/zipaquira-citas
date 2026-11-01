@@ -55,7 +55,14 @@ function getBaseUrl(req) {
   }
 
   // Active Global Cloudflare URL that works on any phone worldwide
-  return 'https://morning-groups-sydney-pays.trycloudflare.com';
+  try {
+    const tunnelFile = path.join(__dirname, '..', '..', 'data', 'tunnel-url.txt');
+    if (fs.existsSync(tunnelFile)) {
+      const u = fs.readFileSync(tunnelFile, 'utf8').trim();
+      if (u && u.startsWith('http')) return u;
+    }
+  } catch (e) {}
+  return 'https://part-sen-mathematical-eagle.trycloudflare.com';
 }
 
 // Función para obtener los turnos maestros configurados por el administrador

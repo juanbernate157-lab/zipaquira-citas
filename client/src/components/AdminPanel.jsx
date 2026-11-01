@@ -61,6 +61,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
   // Network IP for phone scanning (so phone never tries localhost)
   const [lanIp, setLanIp] = useState('192.168.1.40');
+  const [globalTunnelUrl, setGlobalTunnelUrl] = useState('https://part-sen-mathematical-eagle.trycloudflare.com/citas');
 
   useEffect(() => {
     fetch('/api/network-ip')
@@ -68,6 +69,9 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       .then((data) => {
         if (data.ip && data.ip !== 'localhost' && data.ip !== '127.0.0.1') {
           setLanIp(data.ip);
+        }
+        if (data.globalUrl) {
+          setGlobalTunnelUrl(data.globalUrl);
         }
       })
       .catch(() => {});
@@ -783,14 +787,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
             {/* Quick Share Link & QR Banner (Matching user image #1) */}
             {(() => {
-              const globalTunnelUrl = 'https://morning-groups-sydney-pays.trycloudflare.com/citas';
               const isCloud = typeof window !== 'undefined' && 
                 window.location.hostname !== 'localhost' && 
                 window.location.hostname !== '127.0.0.1' && 
                 !window.location.hostname.startsWith('192.168.') && 
                 !window.location.hostname.startsWith('10.');
               const bookingUrl = isCloud ? `${window.location.origin}/citas` : globalTunnelUrl;
-              const displayUrl = isCloud ? `${window.location.host}/citas` : 'morning-groups-sydney-pays.trycloudflare.com/citas';
+              const displayUrl = bookingUrl.replace(/^https?:\/\//, '');
               
               return (
                 <div className="bg-gradient-to-r from-blue-950 via-[#0a122e] to-black rounded-3xl p-6 text-white shadow-2xl border border-blue-500/30 flex flex-col md:flex-row items-center justify-between gap-6">

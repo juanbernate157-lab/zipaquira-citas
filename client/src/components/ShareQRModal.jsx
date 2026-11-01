@@ -4,7 +4,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 export default function ShareQRModal({ settings, onClose }) {
   const [copied, setCopied] = useState(false);
-  const [globalUrl, setGlobalUrl] = useState('https://morning-groups-sydney-pays.trycloudflare.com/citas');
+  const [globalUrl, setGlobalUrl] = useState('https://part-sen-mathematical-eagle.trycloudflare.com/citas');
   const [customUrl, setCustomUrl] = useState('');
   const [isEditingUrl, setIsEditingUrl] = useState(false);
   const qrRef = useRef(null);

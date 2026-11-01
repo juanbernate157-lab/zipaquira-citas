@@ -27,7 +27,18 @@ app.use('/api/emails', emailsRouter);
 app.use('/api/schedules', schedulesRouter);
 
 // Network IP & Global Internet URL helper for mobile scanning
-const GLOBAL_PUBLIC_URL = process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || 'https://morning-groups-sydney-pays.trycloudflare.com';
+function getGlobalPublicUrl() {
+  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL;
+  if (process.env.RENDER_EXTERNAL_URL) return process.env.RENDER_EXTERNAL_URL;
+  try {
+    const tunnelFile = path.join(__dirname, '..', 'data', 'tunnel-url.txt');
+    if (fs.existsSync(tunnelFile)) {
+      const u = fs.readFileSync(tunnelFile, 'utf8').trim();
+      if (u && u.startsWith('http')) return u;
+    }
+  } catch (e) {}
+  return 'https://part-sen-mathematical-eagle.trycloudflare.com';
+}
 
 app.get('/api/network-ip', (req, res) => {
   const nets = os.networkInterfaces();
@@ -43,11 +54,12 @@ app.get('/api/network-ip', (req, res) => {
       }
     }
   }
+  const publicUrl = getGlobalPublicUrl();
   res.json({
     ip: lanIp,
     port: PORT,
-    globalUrl: `${GLOBAL_PUBLIC_URL}/citas`,
-    mobileUrl: `${GLOBAL_PUBLIC_URL}/citas`,
+    globalUrl: `${publicUrl}/citas`,
+    mobileUrl: `${publicUrl}/citas`,
     localUrl: `http://localhost:${PORT}/citas`,
   });
 });
