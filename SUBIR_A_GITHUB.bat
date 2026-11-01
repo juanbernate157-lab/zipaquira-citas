@@ -25,11 +25,11 @@ echo.
 echo [Paso 2/4] Verificando configuracion de Git...
 git config user.name >nul 2>nul
 if %errorlevel% neq 0 (
-    git config --global user.name "Zipaquira Enterprise"
+    git config user.name "Zipaquira Enterprise"
 )
 git config user.email >nul 2>nul
 if %errorlevel% neq 0 (
-    git config --global user.email "admin@zipaquiraenterprise.com"
+    git config user.email "juanbernate157@gmail.com"
 )
 
 if not exist ".git" (
