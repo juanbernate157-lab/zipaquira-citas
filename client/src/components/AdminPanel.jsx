@@ -42,6 +42,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState('');
   const [settingsError, setSettingsError] = useState('');
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [testEmailMsg, setTestEmailMsg] = useState('');
 
   // Schedules & Cancellations Management state
   const [scheduleSlots, setScheduleSlots] = useState([]);
@@ -398,6 +400,28 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     } catch (err) {
       setSavingSettings(false);
       setSettingsError('Error al conectar con el servidor');
+    }
+  };
+
+  const handleTestEmail = async () => {
+    setTestingEmail(true);
+    setTestEmailMsg('');
+    try {
+      const res = await fetch('/api/emails/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: settings.admin_notification_email || settings.smtp_user || settings.contact_email }),
+      });
+      const data = await res.json();
+      setTestingEmail(false);
+      if (res.ok) {
+        setTestEmailMsg(data.message || '¡Correo de prueba enviado con éxito!');
+      } else {
+        setTestEmailMsg('Error: ' + (data.error || 'No se pudo enviar'));
+      }
+    } catch (e) {
+      setTestingEmail(false);
+      setTestEmailMsg('Error al conectar con el servidor');
     }
   };
 
@@ -2011,6 +2035,25 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                 <p>1. Ve a tu Cuenta de Google &rarr; Seguridad &rarr; Verificación en 2 pasos.</p>
                 <p>2. Abajo entra a <strong>"Contraseñas de aplicaciones"</strong> y crea una para "Correo" o "App Web".</p>
                 <p>3. Pega los 16 caracteres aquí y pulsa "Guardar Configuración". A partir de ese momento, todos los correos llegarán directamente a las bandejas reales.</p>
+              </div>
+
+              {/* Botón para probar el envío en vivo */}
+              <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-blue-900/40">
+                <button
+                  type="button"
+                  onClick={handleTestEmail}
+                  disabled={testingEmail}
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 text-xs font-bold transition flex items-center justify-center gap-2"
+                >
+                  <Mail className={`w-4 h-4 ${testingEmail ? 'animate-bounce' : ''}`} />
+                  <span>{testingEmail ? 'Enviando prueba...' : '🧪 Enviar Correo de Prueba a mi Bandeja'}</span>
+                </button>
+
+                {testEmailMsg && (
+                  <span className={`text-xs font-bold ${testEmailMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {testEmailMsg}
+                  </span>
+                )}
               </div>
             </div>
 
