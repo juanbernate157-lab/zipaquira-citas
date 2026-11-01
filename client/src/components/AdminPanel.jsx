@@ -466,40 +466,6 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                 <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4/5 h-8 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent blur-lg rounded-full" />
               </div>
 
-              {/* Interactive Luxury Detailing Controls */}
-              <div className="mt-6 flex items-center gap-2 bg-[#050814]/90 backdrop-blur-md px-4 py-2 rounded-full border border-cyan-500/30 shadow-xl">
-                <button
-                  type="button"
-                  onClick={() => setHeadlightsOn(!headlightsOn)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
-                    headlightsOn ? 'bg-cyan-500 text-black shadow-md shadow-cyan-400/50' : 'bg-white/10 text-gray-400'
-                  }`}
-                >
-                  <Zap className="w-3.5 h-3.5" />
-                  <span>{headlightsOn ? 'Brillo Intenso ON' : 'Brillo OFF'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSportMode(!sportMode)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition ${
-                    sportMode ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-md shadow-blue-500/40' : 'bg-white/10 text-gray-400'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-200" />
-                  <span>Acabado Cerámico</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCarAngle(carAngle === 0 ? 12 : carAngle === 12 ? -12 : 0)}
-                  className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-white/10 hover:bg-white/20 text-gray-300 flex items-center gap-1 transition"
-                >
-                  <Gauge className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Perspectiva 3D</span>
-                </button>
-              </div>
-
             </div>
 
             {/* Bottom specs */}
