@@ -83,6 +83,30 @@ La plataforma estará lista en:
 
 ---
 
+## ☁️ Despliegue en la Nube 24/7 (Gratuito en Render.com o Railway)
+
+Para que tu sistema de agendamiento esté disponible las 24 horas del día para cualquier celular (con datos 4G/5G o Wi-Fi) sin tener tu computador encendido:
+
+### Paso 1: Subir a GitHub
+1. Abre tu cuenta de [GitHub](https://github.com) y crea un nuevo repositorio llamado `zipaquira-citas` (puede ser público o privado).
+2. En la carpeta del proyecto, haz doble clic en **`SUBIR_A_GITHUB.bat`**.
+3. Pega el enlace de tu repositorio de GitHub y presiona Enter. ¡Todos los archivos se subirán automáticamente!
+
+### Paso 2: Conectar con Render.com (100% Gratis)
+1. Ve a [Render.com](https://dashboard.render.com) e inicia sesión con tu cuenta de GitHub.
+2. Haz clic en el botón azul **"New +"** y selecciona **"Web Service"**.
+3. Elige tu repositorio `zipaquira-citas`.
+4. Render detectará automáticamente el archivo `render.yaml` pre-configurado:
+   - **Runtime**: Node (versión 22)
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+5. Haz clic en **"Deploy Web Service"**.
+6. ¡En un par de minutos tendrás tu enlace público seguro con SSL! (por ejemplo `https://zipaquira-citas.onrender.com/citas`).
+
+Al abrir ese enlace en la nube, el sistema detecta automáticamente el dominio público y actualiza el código QR y los botones de compartir para todos tus clientes.
+
+---
+
 ## 📂 Estructura del Proyecto
 
 ```text
