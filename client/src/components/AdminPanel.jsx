@@ -667,7 +667,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-950/70 hover:bg-blue-900/80 text-xs font-bold text-cyan-300 border border-blue-500/40 transition"
             >
               <QrCode className="w-3.5 h-3.5" />
-              <span>localhost:citas</span>
+              <span>Ver QR / Enlace</span>
             </button>
 
             <button
@@ -1869,7 +1869,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit }) {
                   value={settings.admin_notification_email || ''}
                   onChange={(e) => setSettings({ ...settings, admin_notification_email: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                  placeholder="admin@zipaquiraenterprise.com"
+                  placeholder="admin@rufodetailing.com"
                 />
               </div>
             </div>

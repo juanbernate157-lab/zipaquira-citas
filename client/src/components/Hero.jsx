@@ -102,7 +102,7 @@ export default function Hero({ settings, searchTerm, setSearchTerm, selectedCate
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/70 border border-blue-500/40 text-cyan-300 hover:bg-blue-900 font-bold transition shadow-sm"
           >
             <QrCode className="w-4 h-4 text-cyan-400" />
-            <span>Enlace: localhost:citas</span>
+            <span>Compartir QR / Enlace</span>
           </button>
         </div>
 

@@ -250,9 +250,7 @@ export default function App() {
             {/* Brand Info */}
             <div className="space-y-3 md:col-span-1">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-xs">
-                  ZE
-                </div>
+                <img src="/rufo-logo.png" alt="RUFO" className="w-8 h-8 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
                 <h3 className="text-lg font-black text-white">{brandName}</h3>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
@@ -264,7 +262,7 @@ export default function App() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-blue-950/70 hover:bg-blue-900 border border-blue-500/40 text-cyan-300 text-xs font-bold transition shadow-sm"
                 >
                   <QrCode className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>Enlace: localhost:citas</span>
+                  <span>Compartir QR / Enlace</span>
                 </button>
               </div>
             </div>
@@ -327,7 +325,7 @@ export default function App() {
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-2">
             <p>© {new Date().getFullYear()} {brandName}. Todos los derechos reservados.</p>
             <p className="flex items-center gap-1">
-              <span>Recordatorios automáticos a los 30 min • localhost:citas</span>
+              <span>Recordatorios automáticos a los 30 min • RUFO Precise Detailing</span>
             </p>
           </div>
         </div>

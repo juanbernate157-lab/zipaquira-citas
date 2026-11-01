@@ -58,7 +58,7 @@ export default function Navbar({ settings, onOpenShare, onOpenAdmin, onViewMyBoo
             title="Ver link y código QR para compartir"
           >
             <QrCode className="w-4 h-4 text-cyan-400" />
-            <span className="hidden sm:inline">localhost:citas</span>
+            <span className="hidden sm:inline">Compartir QR</span>
             <span className="sm:hidden">QR</span>
           </button>
 
