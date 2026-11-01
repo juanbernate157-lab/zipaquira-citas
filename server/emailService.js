@@ -130,9 +130,87 @@ function getTransporter() {
   return null;
 }
 
-// Send an email (via SMTP or simulated mode) with iCalendar attachment
+// Send an email (via Resend HTTPS, SMTP, or simulated mode) with iCalendar attachment
 async function sendEmail({ to, subject, html, type, appointmentCode, icalContent }) {
   const settings = getSettings();
+  const resendApiKey = (settings.resend_api_key || process.env.RESEND_API_KEY || '').trim();
+
+  console.log(`\n======================================================`);
+  console.log(`📧 [EMAIL OUTBOX] Tipo: ${type.toUpperCase()}`);
+  console.log(`Para: ${to}`);
+  console.log(`Asunto: ${subject}`);
+  console.log(`Método: ${resendApiKey ? 'Resend API (HTTPS Puerto 443 - 100% Render)' : (settings.smtp_enabled ? 'SMTP' : 'Modo Simulación')}`);
+  console.log(`======================================================\n`);
+
+  // 1. MÉTODO 1: Resend API por HTTPS (Puerto 443 - Garantizado en Render Free)
+  if (resendApiKey) {
+    try {
+      // Si no es un dominio personalizado verificado, Resend requiere onboarding@resend.dev para entrega inmediata garantizada
+      let fromEmail = 'RUFO Precise Detailing <onboarding@resend.dev>';
+      if (settings.smtp_from && !settings.smtp_from.includes('@gmail.com') && !settings.smtp_from.includes('@hotmail.com') && !settings.smtp_from.includes('@yahoo.com') && !settings.smtp_from.includes('@outlook.com') && settings.smtp_from.includes('@')) {
+        fromEmail = settings.smtp_from;
+      }
+
+      const replyTo = settings.contact_email || settings.admin_notification_email || 'juanbernate157@gmail.com';
+
+      const payload = {
+        from: fromEmail,
+        to: [to],
+        reply_to: replyTo,
+        subject: subject,
+        html: html,
+      };
+
+      if (icalContent) {
+        payload.attachments = [
+          {
+            filename: 'cita-rufo.ics',
+            content: Buffer.from(icalContent).toString('base64'),
+          }
+        ];
+      }
+
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || 'Error en Resend API');
+      }
+
+      console.log('✅ Correo enviado vía Resend API exitosamente:', data.id);
+      logEmail({
+        to,
+        subject,
+        type,
+        code: appointmentCode,
+        html,
+        status: 'delivered',
+        details: `ResendId: ${data.id}`,
+      });
+      return { success: true, mode: 'resend', messageId: data.id };
+    } catch (err) {
+      console.error('❌ Error enviando correo vía Resend API:', err.message);
+      logEmail({
+        to,
+        subject,
+        type,
+        code: appointmentCode,
+        html,
+        status: 'failed',
+        details: `Resend Error: ${err.message}`,
+      });
+      return { success: false, error: err.message };
+    }
+  }
+
+  // 2. MÉTODO 2: SMTP Clásico (Requiere puertos 465 o 587 abiertos)
   const transporter = getTransporter();
 
   console.log(`\n======================================================`);

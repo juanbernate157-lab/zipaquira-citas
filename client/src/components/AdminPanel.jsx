@@ -1940,24 +1940,65 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
             <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-4">
               <div className="flex items-center justify-between border-b border-blue-900/40 pb-3">
                 <div>
-                  <h4 className="font-extrabold text-white text-base">Servidor de Envíos de Correo Real (SMTP)</h4>
+                  <h4 className="font-extrabold text-white text-base">Servidor de Envíos de Correo Real</h4>
                   <p className="text-xs text-gray-400">
-                    {settings.smtp_enabled 
+                    {settings.resend_api_key || settings.smtp_enabled 
                       ? '🟢 Envío por Internet HABILITADO. Los correos se entregan a Gmail, Outlook y bandejas de entrada reales.' 
-                      : '🟡 Modo Simulación ACTIVO. Los correos quedan registrados en el Buzón de Auditoría pero NO se envían a Internet hasta configurar tu correo.'}
+                      : '🟡 Modo Simulación ACTIVO. Los correos quedan registrados en el Buzón de Auditoría pero NO se envían a Internet hasta configurar tu clave.'}
                   </p>
                 </div>
-
-                <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-950/60 px-4 py-2 rounded-xl border border-blue-500/40">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(settings.smtp_enabled)}
-                    onChange={(e) => setSettings({ ...settings, smtp_enabled: e.target.checked ? 1 : 0 })}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  <span className="text-xs font-black text-white">Activar Envío Real a Internet</span>
-                </label>
               </div>
+
+              {/* METODO 1: RESEND API (HTTPS - 100% COMPATIBLE CON RENDER FREE) */}
+              <div className="p-4 bg-gradient-to-r from-emerald-950/60 via-blue-950/70 to-indigo-950/60 border-2 border-emerald-500/40 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <h5 className="font-extrabold text-white text-sm">
+                      Método 1: Resend API (Recomendado para Render • 100% Gratis 3,000 correos/mes)
+                    </h5>
+                  </div>
+                  <span className="text-[10px] font-black uppercase bg-emerald-500 text-black px-2 py-0.5 rounded-full">
+                    Garantizado en la Nube
+                  </span>
+                </div>
+                <p className="text-xs text-emerald-200">
+                  Render en su plan gratuito bloquea los puertos tradicionales de Gmail (465 y 587). Con <strong>Resend</strong> los correos se envían por HTTPS (puerto web estándar 443) y llegan a cualquier correo al instante sin bloqueos.
+                </p>
+                <div>
+                  <label className="block font-bold text-gray-200 text-xs mb-1">
+                    API Key de Resend (empieza por re_...)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="re_1234567890abcdef..."
+                    value={settings.resend_api_key || ''}
+                    onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-emerald-500/50 text-white font-mono text-xs"
+                  />
+                </div>
+                <div className="text-[11px] text-gray-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-emerald-500/20">
+                  <span>👉 Entra a <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-black">resend.com</a> e inicia sesión con tu GitHub (1 clic).</span>
+                  <span className="text-emerald-400 font-bold">Copia tu API Key gratis y pégala aquí.</span>
+                </div>
+              </div>
+
+              {/* METODO 2: SMTP TRADICIONAL GMAIL */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <h5 className="font-bold text-gray-300 text-xs uppercase tracking-wider">
+                    Método 2: Servidor SMTP Clásico (Gmail)
+                  </h5>
+                  <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-950/60 px-3 py-1 rounded-xl border border-blue-500/40">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(settings.smtp_enabled)}
+                      onChange={(e) => setSettings({ ...settings, smtp_enabled: e.target.checked ? 1 : 0 })}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-xs font-black text-white">Activar SMTP</span>
+                  </label>
+                </div>
 
               {/* Quick Gmail Preset Button */}
               <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
@@ -2036,26 +2077,27 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                 <p>2. Abajo entra a <strong>"Contraseñas de aplicaciones"</strong> y crea una para "Correo" o "App Web".</p>
                 <p>3. Pega los 16 caracteres aquí y pulsa "Guardar Configuración". A partir de ese momento, todos los correos llegarán directamente a las bandejas reales.</p>
               </div>
-
-              {/* Botón para probar el envío en vivo */}
-              <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-blue-900/40">
-                <button
-                  type="button"
-                  onClick={handleTestEmail}
-                  disabled={testingEmail}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 text-xs font-bold transition flex items-center justify-center gap-2"
-                >
-                  <Mail className={`w-4 h-4 ${testingEmail ? 'animate-bounce' : ''}`} />
-                  <span>{testingEmail ? 'Enviando prueba...' : '🧪 Enviar Correo de Prueba a mi Bandeja'}</span>
-                </button>
-
-                {testEmailMsg && (
-                  <span className={`text-xs font-bold ${testEmailMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
-                    {testEmailMsg}
-                  </span>
-                )}
-              </div>
             </div>
+
+            {/* Botón para probar el envío en vivo */}
+            <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-blue-900/40">
+              <button
+                type="button"
+                onClick={handleTestEmail}
+                disabled={testingEmail}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-950/70 hover:bg-indigo-900 border border-indigo-500/50 text-indigo-200 text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <Mail className={`w-4 h-4 ${testingEmail ? 'animate-bounce' : ''}`} />
+                <span>{testingEmail ? 'Enviando prueba...' : '🧪 Enviar Correo de Prueba a mi Bandeja'}</span>
+              </button>
+
+              {testEmailMsg && (
+                <span className={`text-xs font-bold ${testEmailMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {testEmailMsg}
+                </span>
+              )}
+            </div>
+          </div>
 
             <div className="pt-2 flex justify-end">
               <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Clock, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, User, Mail, Phone, FileText, Sparkles, Share2, Sun, Sunset } from 'lucide-react';
+import { X, Calendar, Clock, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, User, Mail, Phone, FileText, Sparkles, Share2, Sun, Sunset, MessageCircle } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function BookingModal({ service, settings, onClose, onBookingSuccess }) {
@@ -548,6 +548,19 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                   <span className="text-gray-800 text-xs text-right max-w-[200px]">{settings?.address || 'Calle 5 # 10-25'}, {settings?.city}</span>
                 </div>
               </div>
+
+              {/* Direct WhatsApp Confirmation Button */}
+              {(settings?.whatsapp || settings?.phone) && (
+                <a
+                  href={`https://wa.me/${(settings?.whatsapp || settings?.phone).replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`¡Hola RUFO Precise Detailing! Acabo de agendar una cita en la web:\n\n📋 Código: ${confirmedBooking.code}\n👤 Cliente: ${confirmedBooking.client_name}\n🚗 Servicio: ${confirmedBooking.service_name}\n📅 Fecha y Hora: ${confirmedBooking.appointment_date} a las ${confirmedBooking.appointment_time}\n💰 Valor: ${priceFormatted}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition hover:scale-[1.01] active:scale-95 text-center cursor-pointer"
+                >
+                  <MessageCircle className="w-5 h-5 text-white" />
+                  <span>📲 Enviar Comprobante por WhatsApp a RUFO</span>
+                </a>
+              )}
 
               {/* Calendar Automation Card with 30m Reminder */}
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-4 text-left space-y-3 shadow-md">

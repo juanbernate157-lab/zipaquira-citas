@@ -85,7 +85,7 @@ router.put('/', (req, res) => {
       'instagram', 'facebook', 'opening_time', 'closing_time',
       'slot_interval_minutes', 'working_days', 'business_hours_text', 'admin_password',
       'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
-      'smtp_secure', 'smtp_enabled'
+      'smtp_secure', 'smtp_enabled', 'resend_api_key'
     ];
 
     const updates = {};
