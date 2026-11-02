@@ -2,24 +2,27 @@ const { getSettings } = require('./db');
 
 // Format clean, emoji-safe text for WhatsApp notification
 function formatWhatsAppBookingMessage(appointment, settings, baseUrl) {
-  const priceFormatted = `${settings?.currency_symbol || '$'} ${Number(appointment.service_price).toLocaleString()} ${settings?.currency_code || 'COP'}`;
-  const address = `${settings?.address || 'Calle 5 # 10-25'}, ${settings?.city || 'Zipaquira'}`;
+  const duration = appointment.service_duration || 60;
+  const siteUrl = baseUrl || 'https://zipaquira-citas.onrender.com';
 
-  return [
+  const lines = [
     `*NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING*`,
-    ``,
-    `* Codigo de Cita: ${appointment.code}`,
-    `* Cliente: ${appointment.client_name}`,
-    `* Telefono Cliente: ${appointment.client_phone}`,
-    `* Servicio: ${appointment.service_name}`,
-    `* Fecha: ${appointment.appointment_date}`,
-    `* Hora: ${appointment.appointment_time} (${appointment.service_duration} min)`,
-    `* Valor a Cobrar: ${priceFormatted}`,
-    `* Lugar: ${address}`,
-    appointment.client_notes ? `* Notas: "${appointment.client_notes}"` : null,
-    ``,
-    `* Ver en el Sistema: ${baseUrl}/cita/${appointment.code}`
-  ].filter(Boolean).join('\n');
+    `• Codigo de Cita: ${appointment.code}`,
+    `• Cliente: ${appointment.client_name}`,
+    `• Telefono Cliente: ${appointment.client_phone}`,
+    `• Servicio: ${appointment.service_name}`,
+    `• Fecha: ${appointment.appointment_date}`,
+    `• Hora: ${appointment.appointment_time} (${duration} min)`,
+  ];
+
+  if (appointment.client_notes && appointment.client_notes.trim()) {
+    lines.push(`• Notas: ${appointment.client_notes.trim()}`);
+  }
+
+  lines.push('');
+  lines.push(siteUrl);
+
+  return lines.join('\n');
 }
 
 // Send automated WhatsApp message via CallMeBot API directly to administrator's phone (100% cloud delivery)
