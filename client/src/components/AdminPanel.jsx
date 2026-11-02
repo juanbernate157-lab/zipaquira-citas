@@ -4,7 +4,7 @@ import {
   Plus, Edit2, Trash2, Settings as SettingsIcon, Mail, QrCode, Search,
   Filter, Phone, ExternalLink, Shield, Save, Eye, Bell,
   Sparkles, AlertCircle, Lock, User, KeyRound, Zap, ArrowRight,
-  Flame, Gauge, Check, Sun, Sunset, Ban, CheckCircle2, AlertTriangle
+  Flame, Gauge, Check, Sun, Sunset, Ban, CheckCircle2, AlertTriangle, RotateCcw
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -100,13 +100,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       fetchAdminSettings();
       fetchSchedulesOverview();
 
-      // Real-time auto-refresh every 8 seconds
+      // Real-time auto-refresh every 6 seconds
       const interval = setInterval(() => {
         fetchAppointments(true);
-      }, 8000);
+      }, 6000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, statusFilter, dateFilter]);
+  }, [isAuthenticated]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -138,11 +138,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
   const fetchAppointments = (isBackground = false) => {
     if (!isBackground) setLoadingApps(true);
-    let url = `/api/appointments?status=${statusFilter}`;
-    if (dateFilter) url += `&date=${dateFilter}`;
-    if (appSearch) url += `&search=${encodeURIComponent(appSearch)}`;
-
-    fetch(url)
+    // Fetch all appointments so the Turn Monitor and KPIs are always 100% accurate
+    fetch('/api/appointments?limit=200')
       .then((res) => {
         if (!res.ok) throw new Error('Error al consultar citas');
         return res.json();
@@ -806,43 +803,89 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
               </div>
             )}
 
-            {/* Quick KPI Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-[#0a0f22] p-5 rounded-3xl border border-blue-900/40 shadow-lg">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase mb-2">
-                  <span>Citas para Hoy</span>
-                  <Calendar className="w-4 h-4 text-blue-400" />
-                </div>
-                <div className="text-3xl font-black text-white">{stats.today || 0}</div>
-                <span className="text-[11px] text-gray-500 mt-1 block">Programadas hoy</span>
-              </div>
+            {/* Quick KPI Cards (Interactive 1-Click Filters) */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('all'); setDateFilter(''); }}
+                className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
+                  statusFilter === 'all' && !dateFilter
+                    ? 'bg-blue-600/30 border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.3)] ring-1 ring-cyan-400'
+                    : 'bg-[#0a0f22] border-blue-900/40 hover:bg-blue-950/40'
+                }`}
+              >
+                <div className="text-gray-400 text-[11px] font-bold uppercase mb-1">Todas las Citas</div>
+                <div className="text-2xl font-black text-white">{stats.total || appointments.length || 0}</div>
+                <span className="text-[10px] text-cyan-400 font-bold mt-1 block">Ver historial completo</span>
+              </button>
 
-              <div className="bg-[#0a0f22] p-5 rounded-3xl border border-blue-900/40 shadow-lg">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase mb-2">
+              <button
+                type="button"
+                onClick={() => { setDateFilter(new Date().toISOString().slice(0, 10)); setStatusFilter('all'); }}
+                className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
+                  dateFilter === new Date().toISOString().slice(0, 10)
+                    ? 'bg-blue-600/30 border-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] ring-1 ring-blue-400'
+                    : 'bg-[#0a0f22] border-blue-900/40 hover:bg-blue-950/40'
+                }`}
+              >
+                <div className="flex items-center justify-between text-gray-400 text-[11px] font-bold uppercase mb-1">
+                  <span>Para Hoy</span>
+                  <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                </div>
+                <div className="text-2xl font-black text-white">{stats.today || 0}</div>
+                <span className="text-[10px] text-blue-400 font-bold mt-1 block">Turnos de hoy</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('confirmed'); setDateFilter(''); }}
+                className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
+                  statusFilter === 'confirmed'
+                    ? 'bg-emerald-950/60 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] ring-1 ring-emerald-400'
+                    : 'bg-[#0a0f22] border-blue-900/40 hover:bg-emerald-950/30'
+                }`}
+              >
+                <div className="flex items-center justify-between text-gray-400 text-[11px] font-bold uppercase mb-1">
                   <span>Confirmadas</span>
-                  <CheckCircle className="w-4 h-4 text-green-400" />
+                  <CheckCircle className="w-3.5 h-3.5 text-green-400" />
                 </div>
-                <div className="text-3xl font-black text-green-400">{stats.confirmed || 0}</div>
-                <span className="text-[11px] text-gray-500 mt-1 block">Listas para atender</span>
-              </div>
+                <div className="text-2xl font-black text-green-400">{stats.confirmed || 0}</div>
+                <span className="text-[10px] text-emerald-400 font-bold mt-1 block">Pendientes de atención</span>
+              </button>
 
-              <div className="bg-[#0a0f22] p-5 rounded-3xl border border-blue-900/40 shadow-lg">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase mb-2">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('completed'); setDateFilter(''); }}
+                className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
+                  statusFilter === 'completed'
+                    ? 'bg-purple-950/60 border-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.3)] ring-1 ring-purple-400'
+                    : 'bg-[#0a0f22] border-blue-900/40 hover:bg-purple-950/30'
+                }`}
+              >
+                <div className="flex items-center justify-between text-gray-400 text-[11px] font-bold uppercase mb-1">
                   <span>Completadas</span>
-                  <Users className="w-4 h-4 text-cyan-400" />
+                  <Users className="w-3.5 h-3.5 text-purple-400" />
                 </div>
-                <div className="text-3xl font-black text-cyan-300">{stats.completed || 0}</div>
-                <span className="text-[11px] text-gray-500 mt-1 block">Atendidas con éxito</span>
-              </div>
+                <div className="text-2xl font-black text-purple-300">{stats.completed || 0}</div>
+                <span className="text-[10px] text-purple-400 font-bold mt-1 block">Ya atendidas</span>
+              </button>
 
-              <div className="bg-[#0a0f22] p-5 rounded-3xl border border-blue-900/40 shadow-lg">
-                <div className="flex items-center justify-between text-gray-400 text-xs font-bold uppercase mb-2">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('cancelled'); setDateFilter(''); }}
+                className={`p-4 rounded-2xl border text-left transition cursor-pointer ${
+                  statusFilter === 'cancelled'
+                    ? 'bg-red-950/60 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] ring-1 ring-red-400'
+                    : 'bg-[#0a0f22] border-blue-900/40 hover:bg-red-950/30'
+                }`}
+              >
+                <div className="flex items-center justify-between text-gray-400 text-[11px] font-bold uppercase mb-1">
                   <span>Canceladas</span>
-                  <XCircle className="w-4 h-4 text-red-400" />
+                  <XCircle className="w-3.5 h-3.5 text-red-400" />
                 </div>
-                <div className="text-3xl font-black text-red-400">{stats.cancelled || 0}</div>
-                <span className="text-[11px] text-gray-500 mt-1 block">Cupos liberados</span>
-              </div>
+                <div className="text-2xl font-black text-red-400">{stats.cancelled || 0}</div>
+                <span className="text-[10px] text-red-400 font-bold mt-1 block">Cupos liberados</span>
+              </button>
             </div>
 
             {/* Quick Share Link & QR Banner (Matching user image #1) */}
@@ -930,6 +973,17 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                   <option value="completed">Completadas</option>
                   <option value="cancelled">Canceladas</option>
                 </select>
+
+                {(statusFilter !== 'all' || dateFilter || appSearch) && (
+                  <button
+                    onClick={() => { setStatusFilter('all'); setDateFilter(''); setAppSearch(''); }}
+                    className="px-3 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-bold transition flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                    title="Quitar filtros y ver todas las citas"
+                  >
+                    <XCircle className="w-3.5 h-3.5 text-red-400" />
+                    <span>Limpiar Filtros</span>
+                  </button>
+                )}
 
                 <button
                   onClick={fetchAppointments}
@@ -1159,6 +1213,40 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                       </tr>
                     ) : (
                       (() => {
+                        const filteredAppointments = appointments.filter((app) => {
+                          if (statusFilter !== 'all' && app.status !== statusFilter) return false;
+                          if (dateFilter && app.appointment_date !== dateFilter) return false;
+                          if (appSearch) {
+                            const q = appSearch.toLowerCase().trim();
+                            const match = (app.client_name || '').toLowerCase().includes(q) ||
+                                          (app.client_phone || '').toLowerCase().includes(q) ||
+                                          (app.client_email || '').toLowerCase().includes(q) ||
+                                          (app.code || '').toLowerCase().includes(q) ||
+                                          (app.service_name || '').toLowerCase().includes(q);
+                            if (!match) return false;
+                          }
+                          return true;
+                        });
+
+                        if (filteredAppointments.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan="8" className="text-center py-12 text-gray-400">
+                                <div className="space-y-2">
+                                  <p className="font-bold text-sm">No se encontraron citas con los filtros seleccionados.</p>
+                                  <p className="text-xs text-gray-500">Hay {appointments.length} citas registradas en el sistema en total.</p>
+                                  <button
+                                    onClick={() => { setStatusFilter('all'); setDateFilter(''); setAppSearch(''); }}
+                                    className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition"
+                                  >
+                                    Ver Todas las Citas ({appointments.length})
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        }
+
                         const activeUpcoming = [...appointments]
                           .filter(a => a.status === 'confirmed' || a.status === 'rescheduled')
                           .sort((a, b) => {
@@ -1170,7 +1258,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                         const currentTurn = activeUpcoming[0] || null;
                         const nextTurn = activeUpcoming[1] || null;
 
-                        return appointments.map((app) => {
+                        return filteredAppointments.map((app) => {
                           const creationDate = new Date(app.created_at);
                           const creationFormatted = creationDate.toLocaleString('es-CO', {
                             dateStyle: 'short',
@@ -1347,22 +1435,35 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                                     <span className="hidden sm:inline">Calendar</span>
                                   </a>
 
+                                  {/* Reactivar cita completada o cancelada */}
+                                  {(app.status === 'completed' || app.status === 'cancelled') && (
+                                    <button
+                                      onClick={() => handleUpdateAppStatus(app.id, 'confirmed')}
+                                      className="p-1.5 px-2.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition flex items-center gap-1 text-[11px] font-bold cursor-pointer"
+                                      title="Reactivar Turno (Devolver a Pendiente de atención)"
+                                    >
+                                      <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
+                                      <span>Reactivar</span>
+                                    </button>
+                                  )}
+
                                   {app.status !== 'completed' && app.status !== 'cancelled' && (
                                     <button
                                       onClick={() => handleUpdateAppStatus(app.id, 'completed')}
-                                      className="p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/40 transition"
+                                      className="p-1.5 px-2.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/40 transition flex items-center gap-1 text-[11px] font-bold cursor-pointer"
                                       title="Marcar como Atendida"
                                     >
-                                      <CheckCircle className="w-4 h-4" />
+                                      <CheckCircle className="w-3.5 h-3.5 text-green-400" />
+                                      <span>Finalizar</span>
                                     </button>
                                   )}
                                   {app.status !== 'cancelled' && (
                                     <button
                                       onClick={() => handleUpdateAppStatus(app.id, 'cancelled')}
-                                      className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition"
+                                      className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition cursor-pointer"
                                       title="Cancelar Cita"
                                     >
-                                      <XCircle className="w-4 h-4" />
+                                      <XCircle className="w-4 h-4 text-red-400" />
                                     </button>
                                   )}
                                 </div>

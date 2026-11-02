@@ -234,8 +234,8 @@ router.get('/', (req, res) => {
       params.push(s, s, s, s, s);
     }
 
-    query += ' ORDER BY appointment_date DESC, appointment_time DESC, id DESC LIMIT ?';
-    params.push(Number(limit) || 100);
+    query += ' ORDER BY id DESC LIMIT ?';
+    params.push(Number(limit) || 200);
 
     const appointments = db.prepare(query).all(...params);
 
