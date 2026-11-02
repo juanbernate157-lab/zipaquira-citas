@@ -2,6 +2,22 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
 
+function formatImageUrl(req, url) {
+  const fallback = 'https://zipaquira-citas.onrender.com/rufo-logo.png';
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    return fallback;
+  }
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const host = req ? req.get('host') : 'zipaquira-citas.onrender.com';
+  if (trimmed.startsWith('/')) {
+    return `https://${host}${trimmed}`;
+  }
+  return `https://${host}/${trimmed}`;
+}
+
 // GET all services
 router.get('/', (req, res) => {
   try {
@@ -11,7 +27,10 @@ router.get('/', (req, res) => {
       query += ' WHERE is_active = 1';
     }
     query += ' ORDER BY category ASC, id DESC';
-    const services = db.prepare(query).all();
+    const services = db.prepare(query).all().map(s => ({
+      ...s,
+      image_url: formatImageUrl(req, s.image_url),
+    }));
     res.json(services);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -33,7 +52,10 @@ router.get('/:id', (req, res) => {
   try {
     const service = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
     if (!service) return res.status(404).json({ error: 'Servicio no encontrado' });
-    res.json(service);
+    res.json({
+      ...service,
+      image_url: formatImageUrl(req, service.image_url),
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -47,7 +69,7 @@ router.post('/', (req, res) => {
       return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
     }
 
-    const defaultImg = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80';
+    const finalImg = formatImageUrl(req, image_url);
     const stmt = db.prepare(`
       INSERT INTO services (name, category, description, price, duration_minutes, image_url, badge, is_active)
       VALUES (?, ?, ?, ?, ?, ?, ?, 1)
@@ -59,12 +81,15 @@ router.post('/', (req, res) => {
       (description || '').trim(),
       Number(price) || 0,
       Number(duration_minutes) || 30,
-      image_url || defaultImg,
+      finalImg,
       badge || ''
     );
 
     const newService = db.prepare('SELECT * FROM services WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json(newService);
+    res.status(201).json({
+      ...newService,
+      image_url: formatImageUrl(req, newService.image_url),
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -77,6 +102,8 @@ router.put('/:id', (req, res) => {
     const existing = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
     if (!existing) return res.status(404).json({ error: 'Servicio no encontrado' });
 
+    const finalImg = image_url !== undefined ? formatImageUrl(req, image_url) : existing.image_url;
+
     db.prepare(`
       UPDATE services 
       SET name = ?, category = ?, description = ?, price = ?, duration_minutes = ?, image_url = ?, badge = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
@@ -87,14 +114,17 @@ router.put('/:id', (req, res) => {
       description !== undefined ? description.trim() : existing.description,
       price !== undefined ? Number(price) : existing.price,
       duration_minutes !== undefined ? Number(duration_minutes) : existing.duration_minutes,
-      image_url !== undefined ? image_url : existing.image_url,
+      finalImg,
       badge !== undefined ? badge : existing.badge,
       is_active !== undefined ? Number(is_active) : existing.is_active,
       req.params.id
     );
 
     const updated = db.prepare('SELECT * FROM services WHERE id = ?').get(req.params.id);
-    res.json(updated);
+    res.json({
+      ...updated,
+      image_url: formatImageUrl(req, updated.image_url),
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

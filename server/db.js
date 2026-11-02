@@ -132,6 +132,21 @@ function initDb() {
     // Column already exists
   }
 
+  // Ensure all image and logo URLs are complete absolute HTTPS URLs
+  try {
+    db.exec(`
+      UPDATE services 
+      SET image_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png' 
+      WHERE image_url LIKE '/%' OR image_url = '' OR image_url IS NULL;
+
+      UPDATE settings 
+      SET logo_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png' 
+      WHERE logo_url LIKE '/%' OR logo_url = '' OR logo_url IS NULL;
+    `);
+  } catch (e) {
+    // ignore
+  }
+
   // Seed default schedule slots if empty
   const slotCount = db.prepare('SELECT COUNT(*) as count FROM schedule_slots').get();
   if (!slotCount || slotCount.count === 0) {

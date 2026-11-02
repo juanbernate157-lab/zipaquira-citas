@@ -346,9 +346,14 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     const url = isEdit ? `/api/services/${editingService.id}` : '/api/services';
     const method = isEdit ? 'PUT' : 'POST';
 
+    let finalImg = (editingService.image_url || '').trim();
+    if (!finalImg.startsWith('http://') && !finalImg.startsWith('https://')) {
+      finalImg = `https://zipaquira-citas.onrender.com${finalImg.startsWith('/') ? '' : '/'}${finalImg || 'rufo-logo.png'}`;
+    }
+
     const payload = {
       ...editingService,
-      image_url: (editingService.image_url || '').trim() || '/rufo-logo.png',
+      image_url: finalImg,
       price: Number(editingService.price) || 0,
       duration_minutes: Number(editingService.duration_minutes) || 30,
     };
@@ -1104,7 +1109,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     price: 45000,
                     duration_minutes: 30,
                     badge: '',
-                    image_url: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80',
+                    image_url: 'https://zipaquira-citas.onrender.com/rufo-logo.png',
                     is_active: 1,
                   });
                   setShowServiceModal(true);
@@ -1148,7 +1153,14 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => {
-                            setEditingService(s);
+                            let cleanUrl = (s.image_url || '').trim();
+                            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                              cleanUrl = `https://zipaquira-citas.onrender.com${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl || 'rufo-logo.png'}`;
+                            }
+                            setEditingService({
+                              ...s,
+                              image_url: cleanUrl,
+                            });
                             setShowServiceModal(true);
                           }}
                           className="p-2 rounded-xl border border-blue-900/50 hover:bg-blue-950/60 text-cyan-300 transition"

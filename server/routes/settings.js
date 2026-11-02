@@ -3,6 +3,22 @@ const router = express.Router();
 const QRCode = require('qrcode');
 const { db, getSettings, updateSettings } = require('../db');
 
+function formatImageUrl(req, url) {
+  const fallback = 'https://zipaquira-citas.onrender.com/rufo-logo.png';
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    return fallback;
+  }
+  const trimmed = url.trim();
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  const host = req ? req.get('host') : 'zipaquira-citas.onrender.com';
+  if (trimmed.startsWith('/')) {
+    return `https://${host}${trimmed}`;
+  }
+  return `https://${host}/${trimmed}`;
+}
+
 // GET public settings (for landing page & booking)
 router.get('/', (req, res) => {
   try {
@@ -13,8 +29,8 @@ router.get('/', (req, res) => {
       hero_title: s.hero_title,
       hero_subtitle: s.hero_subtitle,
       tagline: s.tagline,
-      logo_url: s.logo_url,
-      banner_url: s.banner_url,
+      logo_url: formatImageUrl(req, s.logo_url),
+      banner_url: s.banner_url ? formatImageUrl(req, s.banner_url) : '',
       primary_color: s.primary_color,
       accent_color: s.accent_color,
       currency_symbol: s.currency_symbol,
@@ -45,6 +61,8 @@ router.get('/admin', (req, res) => {
     // Mask password
     const adminSettings = {
       ...s,
+      logo_url: formatImageUrl(req, s.logo_url),
+      banner_url: s.banner_url ? formatImageUrl(req, s.banner_url) : '',
       admin_password: '', // do not expose plain
       has_password: Boolean(s.admin_password),
     };
