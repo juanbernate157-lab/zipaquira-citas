@@ -346,11 +346,18 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     const url = isEdit ? `/api/services/${editingService.id}` : '/api/services';
     const method = isEdit ? 'PUT' : 'POST';
 
+    const payload = {
+      ...editingService,
+      image_url: (editingService.image_url || '').trim() || '/rufo-logo.png',
+      price: Number(editingService.price) || 0,
+      duration_minutes: Number(editingService.duration_minutes) || 30,
+    };
+
     try {
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingService),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setShowServiceModal(false);
@@ -1179,7 +1186,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     </button>
                   </div>
 
-                  <form onSubmit={handleSaveService} className="space-y-3.5 text-xs sm:text-sm">
+                  <form onSubmit={handleSaveService} noValidate className="space-y-3.5 text-xs sm:text-sm">
                     <div>
                       <label className="block font-bold text-gray-300 mb-1">Nombre del Servicio *</label>
                       <input
@@ -1249,9 +1256,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     </div>
 
                     <div>
-                      <label className="block font-bold text-gray-300 mb-1">URL de Imagen</label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-bold text-gray-300">Foto / Imagen (Opcional)</label>
+                        <span className="text-[10px] text-cyan-400">Predeterminada: Logo RUFO</span>
+                      </div>
                       <input
-                        type="url"
+                        type="text"
+                        placeholder="/rufo-logo.png"
                         value={editingService.image_url || ''}
                         onChange={(e) => setEditingService({ ...editingService, image_url: e.target.value })}
                         className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-blue-900/50 text-white text-xs"
@@ -1606,7 +1617,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
         {/* TAB 4: CONTROL TOTAL DE LA PÁGINA (CMS) */}
         {/* ======================================================== */}
         {activeTab === 'cms' && (
-          <form onSubmit={handleSaveSettings} className="space-y-6">
+          <form onSubmit={handleSaveSettings} noValidate className="space-y-6">
             
             <div className="flex items-center justify-between">
               <div>
@@ -1682,13 +1693,16 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block font-bold text-gray-300 mb-1">URL del Logo (Opcional)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block font-bold text-gray-300">URL del Logo (Opcional)</label>
+                    <span className="text-[10px] text-cyan-400">Predeterminado: Logo RUFO</span>
+                  </div>
                   <input
-                    type="url"
+                    type="text"
                     value={settings.logo_url || ''}
                     onChange={(e) => setSettings({ ...settings, logo_url: e.target.value })}
                     className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-blue-900/50 text-white text-xs"
-                    placeholder="https://..."
+                    placeholder="/rufo-logo.png"
                   />
                 </div>
                 <div>
@@ -1877,7 +1891,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
         {/* TAB 4: AJUSTES DE CORREO & NOTIFICACIONES */}
         {/* ======================================================== */}
         {activeTab === 'notifications' && (
-          <form onSubmit={handleSaveSettings} className="space-y-6">
+          <form onSubmit={handleSaveSettings} noValidate className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-black text-white tracking-tight">Configuración de Correos y Notificaciones</h3>
