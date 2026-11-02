@@ -12,6 +12,10 @@ const {
   createICSContent,
   createGoogleCalendarUrl,
 } = require('../emailService');
+const {
+  formatWhatsAppBookingMessage,
+  sendAdminWhatsAppNotification,
+} = require('../whatsappService');
 
 // Helper to generate readable short code: CIT-XXXXX
 function generateBookingCode() {
@@ -386,28 +390,17 @@ router.post('/', async (req, res) => {
     const settings = getSettings();
     const googleCalendarUrl = createGoogleCalendarUrl(newAppointment, settings);
 
-    // Build direct WhatsApp notification URL for the administrator
-    const adminPhone = (settings.whatsapp || settings.phone || '573006042818').replace(/[^0-9]/g, '');
-    const priceFormatted = `${settings.currency_symbol || '$'} ${Number(newAppointment.service_price).toLocaleString()} ${settings.currency_code || 'COP'}`;
-    const waText = `🏎️ *¡NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING!* 🏎️\n\n` +
-      `📋 *Código de Cita:* ${newAppointment.code}\n` +
-      `👤 *Cliente:* ${newAppointment.client_name}\n` +
-      `📞 *Teléfono Cliente:* ${newAppointment.client_phone}\n` +
-      `🚗 *Servicio:* ${newAppointment.service_name}\n` +
-      `📅 *Fecha:* ${newAppointment.appointment_date}\n` +
-      `⏰ *Hora:* ${newAppointment.appointment_time} (${newAppointment.service_duration} min)\n` +
-      `💰 *Valor a Cobrar:* ${priceFormatted}\n` +
-      `📍 *Lugar:* ${settings.address || 'Calle 5 # 10-25'}, ${settings.city || 'Zipaquirá'}\n` +
-      (newAppointment.client_notes ? `📝 *Notas:* "${newAppointment.client_notes}"\n\n` : '\n') +
-      `👉 *Gestionar en el Sistema:* ${baseUrl}/cita/${newAppointment.code}`;
-
+    // Build direct WhatsApp notification URL for the administrator (clean text without corrupted characters)
+    const adminPhone = (settings.callmebot_phone || settings.whatsapp || settings.phone || '573006042818').replace(/[^0-9]/g, '');
+    const waText = formatWhatsAppBookingMessage(newAppointment, settings, baseUrl);
     const adminWhatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waText)}`;
 
-    // Send emails in background (Admin notification first, then client confirmation)
+    // Send notifications in background (Automated WhatsApp direct to Admin + Emails)
     Promise.allSettled([
+      sendAdminWhatsAppNotification(newAppointment, baseUrl),
       sendAdminNewBookingNotification(newAppointment, baseUrl),
       sendClientBookingConfirmation(newAppointment, baseUrl),
-    ]).catch(err => console.error('Error enviando correos de nueva cita:', err));
+    ]).catch(err => console.error('Error enviando notificaciones de nueva cita:', err));
 
     res.status(201).json({
       success: true,

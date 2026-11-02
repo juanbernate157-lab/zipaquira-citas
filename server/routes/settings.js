@@ -103,7 +103,8 @@ router.put('/', (req, res) => {
       'instagram', 'facebook', 'opening_time', 'closing_time',
       'slot_interval_minutes', 'working_days', 'business_hours_text', 'admin_password',
       'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from',
-      'smtp_secure', 'smtp_enabled', 'resend_api_key', 'google_script_url', 'brevo_api_key'
+      'smtp_secure', 'smtp_enabled', 'resend_api_key', 'google_script_url', 'brevo_api_key',
+      'callmebot_api_key', 'callmebot_phone'
     ];
 
     const updates = {};
@@ -141,6 +142,36 @@ router.put('/', (req, res) => {
         admin_password: '',
       }
     });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST send test WhatsApp notification to administrator
+router.post('/test-whatsapp', async (req, res) => {
+  try {
+    const { sendAdminWhatsAppNotification } = require('../whatsappService');
+    const baseUrl = req.protocol + '://' + req.get('host');
+    const mockApp = {
+      code: 'CIT-TEST',
+      client_name: 'Cliente de Prueba',
+      client_phone: '+57 312 345 6789',
+      service_name: 'Lavada Básica Premium',
+      appointment_date: new Date().toISOString().slice(0, 10),
+      appointment_time: '10:00',
+      service_duration: 60,
+      service_price: 35000,
+      client_notes: 'Prueba de notificación automática por WhatsApp desde RUFO Detailing'
+    };
+
+    const result = await sendAdminWhatsAppNotification(mockApp, baseUrl);
+    if (result.success) {
+      res.json({ success: true, message: '¡WhatsApp de prueba enviado con éxito al administrador!' });
+    } else if (result.reason === 'no_api_key') {
+      res.status(400).json({ error: 'Debes configurar tu API Key de CallMeBot en Ajustes para enviar automáticamente.' });
+    } else {
+      res.status(400).json({ error: result.response || result.error || 'No se pudo enviar el WhatsApp' });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

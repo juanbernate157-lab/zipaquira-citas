@@ -44,6 +44,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
   const [settingsError, setSettingsError] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
   const [testEmailMsg, setTestEmailMsg] = useState('');
+  const [testingWhatsApp, setTestingWhatsApp] = useState(false);
+  const [testWhatsAppMsg, setTestWhatsAppMsg] = useState('');
   const [copiedScript, setCopiedScript] = useState(false);
 
   // Schedules & Cancellations Management state
@@ -435,6 +437,27 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     } catch (e) {
       setTestingEmail(false);
       setTestEmailMsg('Error al conectar con el servidor');
+    }
+  };
+
+  const handleTestWhatsApp = async () => {
+    setTestingWhatsApp(true);
+    setTestWhatsAppMsg('');
+    try {
+      const res = await fetch('/api/settings/test-whatsapp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      setTestingWhatsApp(false);
+      if (res.ok) {
+        setTestWhatsAppMsg(data.message || '¡WhatsApp de prueba enviado con éxito!');
+      } else {
+        setTestWhatsAppMsg('Error: ' + (data.error || 'No se pudo enviar WhatsApp'));
+      }
+    } catch (e) {
+      setTestingWhatsApp(false);
+      setTestWhatsAppMsg('Error conectando con el servidor');
     }
   };
 
@@ -2460,6 +2483,111 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
               {testEmailMsg && (
                 <span className={`text-xs font-bold ${testEmailMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
                   {testEmailMsg}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* WHATSAPP AUTOMÁTICO EN LA NUBE (CALLMEBOT API) */}
+          <div className="bg-[#0a0f22] p-6 rounded-3xl border-2 border-emerald-500/40 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-emerald-500/30 pb-3 gap-2">
+              <div className="flex items-center gap-2.5">
+                <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping" />
+                <div>
+                  <h4 className="font-extrabold text-white text-base">
+                    Notificación 100% Automática por WhatsApp al Administrador
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Envía un mensaje de WhatsApp a <strong>{settings.callmebot_phone || settings.whatsapp || '+57 300 604 2818'}</strong> directamente desde el servidor apenas el cliente agenda, sin que el cliente tenga que enviar nada.
+                  </p>
+                </div>
+              </div>
+              <div>
+                {settings.callmebot_api_key ? (
+                  <span className="text-[11px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    WhatsApp Automático ACTIVO
+                  </span>
+                ) : (
+                  <span className="text-[11px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40 px-3 py-1 rounded-full">
+                    🟡 Pendiente Activar Clave
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+              <div>
+                <label className="block font-bold text-gray-200 mb-1">
+                  Número de WhatsApp del Administrador
+                </label>
+                <input
+                  type="text"
+                  value={settings.callmebot_phone || '+573006042818'}
+                  onChange={(e) => setSettings({ ...settings, callmebot_phone: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-emerald-500/40 text-white font-mono text-xs focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                  placeholder="+573006042818"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Formato internacional con código de país (ej: +573006042818).
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-200 mb-1">
+                  API Key de CallMeBot (Clave gratuita de 6 dígitos)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ejemplo: 123456"
+                  value={settings.callmebot_api_key || ''}
+                  onChange={(e) => setSettings({ ...settings, callmebot_api_key: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-emerald-500/40 text-white font-mono text-xs focus:ring-2 focus:ring-emerald-400 focus:outline-none"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">
+                  La clave numérica que te entrega el bot por WhatsApp al activarlo.
+                </p>
+              </div>
+            </div>
+
+            {/* Guía rápida de activación */}
+            <div className="p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl text-xs text-gray-300 space-y-2.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="font-extrabold text-emerald-300">
+                  ⚡ ¿Cómo activar el WhatsApp automático en 20 segundos? (100% Gratis)
+                </span>
+                <a
+                  href="https://wa.me/34684723962?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transition hover:scale-105"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white text-emerald-700" />
+                  <span>👉 Toca aquí para obtener tu Clave (1 Clic)</span>
+                </a>
+              </div>
+              <ol className="list-decimal pl-4 space-y-1 text-gray-300 text-[11px]">
+                <li>Toca el botón verde de arriba o abre WhatsApp desde el celular <strong>+57 300 604 2818</strong> y envía este mensaje a <strong>+34 684 72 39 62</strong>: <code className="bg-black/60 px-1 py-0.5 rounded text-emerald-300">I allow callmebot to send me messages</code></li>
+                <li>En pocos segundos el bot te responderá: <em>"API Activated for your phone number. Your APIKEY is XXXXXX"</em>.</li>
+                <li>Copia ese número de API Key, pégalo en la casilla de arriba y pulsa <strong>Guardar Configuración</strong>.</li>
+              </ol>
+            </div>
+
+            {/* Botón de prueba de WhatsApp */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-emerald-500/20">
+              <button
+                type="button"
+                onClick={handleTestWhatsApp}
+                disabled={testingWhatsApp}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800 border border-emerald-500/50 text-emerald-200 text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <MessageCircle className={`w-4 h-4 ${testingWhatsApp ? 'animate-bounce' : ''}`} />
+                <span>{testingWhatsApp ? 'Enviando WhatsApp de prueba...' : '🧪 Enviar WhatsApp de Prueba al Administrador'}</span>
+              </button>
+
+              {testWhatsAppMsg && (
+                <span className={`text-xs font-bold ${testWhatsAppMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+                  {testWhatsAppMsg}
                 </span>
               )}
             </div>
