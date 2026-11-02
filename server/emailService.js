@@ -151,11 +151,12 @@ async function sendEmail({ to, subject, html, type, appointmentCode, icalContent
         fromEmail = settings.smtp_from;
       }
 
-      const replyTo = settings.contact_email || settings.admin_notification_email || 'juanbernate157@gmail.com';
+      const replyTo = settings.contact_email || settings.admin_notification_email || 'ru88foramirez@hotmail.com';
+      const recipients = Array.isArray(to) ? to : String(to).split(/[,;]/).map(s => s.trim()).filter(Boolean);
 
       const payload = {
         from: fromEmail,
-        to: [to],
+        to: recipients,
         reply_to: replyTo,
         subject: subject,
         html: html,
@@ -431,8 +432,13 @@ async function sendClientBookingConfirmation(appointment, baseUrl) {
 // 2. Email Notification to Admin on New Booking (with Calendar invite & 30m reminder)
 async function sendAdminNewBookingNotification(appointment, baseUrl) {
   const settings = getSettings();
-  const adminEmail = settings.admin_notification_email || settings.contact_email;
-  if (!adminEmail) return;
+  const rawAdminEmail = settings.admin_notification_email || settings.contact_email || 'ru88foramirez@hotmail.com, juanbernate157@gmail.com';
+  if (!rawAdminEmail) return;
+
+  const adminEmails = rawAdminEmail
+    .split(/[,;]/)
+    .map(e => e.trim())
+    .filter(Boolean);
 
   const priceFormatted = `${settings.currency_symbol || '$'} ${Number(appointment.service_price).toLocaleString()} ${settings.currency_code || 'COP'}`;
   const now = new Date(appointment.created_at || Date.now());
@@ -531,14 +537,20 @@ async function sendAdminNewBookingNotification(appointment, baseUrl) {
   const html = getBaseTemplate(content, settings);
   const subject = `🔔 Nueva Cita Agendada: ${appointment.client_name} - ${appointment.appointment_date} a las ${appointment.appointment_time}`;
 
-  return await sendEmail({
-    to: adminEmail,
-    subject,
-    html,
-    type: 'admin_notification',
-    appointmentCode: appointment.code,
-    icalContent,
-  });
+  // Enviar a todos los correos administradores configurados
+  let lastResult = { success: false };
+  for (const targetEmail of adminEmails) {
+    lastResult = await sendEmail({
+      to: targetEmail,
+      subject,
+      html,
+      type: 'admin_notification',
+      appointmentCode: appointment.code,
+      icalContent,
+    });
+  }
+
+  return lastResult;
 }
 
 // 3. Email Reminder 30 Minutes Before Appointment

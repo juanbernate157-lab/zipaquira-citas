@@ -140,8 +140,10 @@ function initDb() {
       WHERE image_url LIKE '/%' OR image_url = '' OR image_url IS NULL;
 
       UPDATE settings 
-      SET logo_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png' 
-      WHERE logo_url LIKE '/%' OR logo_url = '' OR logo_url IS NULL;
+      SET logo_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png',
+          admin_notification_email = 'ru88foramirez@hotmail.com, juanbernate157@gmail.com',
+          contact_email = 'ru88foramirez@hotmail.com'
+      WHERE id = 1;
     `);
   } catch (e) {
     // ignore
