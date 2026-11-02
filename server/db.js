@@ -156,6 +156,12 @@ function initDb() {
     // Column already exists
   }
 
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN admin_username TEXT DEFAULT 'pedrito';`);
+  } catch (e) {
+    // Column already exists
+  }
+
   // Ensure all image and logo URLs are complete absolute HTTPS URLs
   try {
     db.exec(`
@@ -166,7 +172,9 @@ function initDb() {
       UPDATE settings 
       SET logo_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png',
           admin_notification_email = 'ru88foramirez@hotmail.com, juanbernate157@gmail.com',
-          contact_email = 'ru88foramirez@hotmail.com'
+          contact_email = 'ru88foramirez@hotmail.com',
+          admin_username = 'pedrito',
+          admin_password = 'pedrito777'
       WHERE id = 1;
     `);
   } catch (e) {

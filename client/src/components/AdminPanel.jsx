@@ -11,7 +11,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSettingsSaved }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [usernameInput, setUsernameInput] = useState('admin');
+  const [usernameInput, setUsernameInput] = useState('pedrito');
   const [passwordInput, setPasswordInput] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState('');
@@ -116,7 +116,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       const res = await fetch('/api/settings/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: passwordInput }),
+        body: JSON.stringify({ username: usernameInput, password: passwordInput }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -564,7 +564,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     />
                   </div>
                   <p className="text-[11px] text-gray-500 mt-1 pl-4">
-                    * Contraseña por defecto: <strong className="text-cyan-400 font-mono">admin123</strong>
+                    * Usuario: <strong className="text-cyan-400 font-mono">pedrito</strong> • Contraseña: <strong className="text-cyan-400 font-mono">pedrito777</strong>
                   </p>
                 </div>
 
@@ -2266,16 +2266,29 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
             {/* Security */}
             <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-4">
               <h4 className="font-extrabold text-white text-base border-b border-blue-900/40 pb-2">
-                4. Contraseña del Administrador
+                4. Credenciales de Acceso (Usuario y Contraseña)
               </h4>
-              <div className="max-w-md">
-                <input
-                  type="password"
-                  placeholder="Nueva contraseña (dejar vacío para mantener la actual)"
-                  value={settings.admin_password || ''}
-                  onChange={(e) => setSettings({ ...settings, admin_password: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+                <div>
+                  <label className="block font-bold text-gray-300 mb-1 text-xs sm:text-sm">Usuario Administrador</label>
+                  <input
+                    type="text"
+                    placeholder="pedrito"
+                    value={settings.admin_username || 'pedrito'}
+                    onChange={(e) => setSettings({ ...settings, admin_username: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-gray-300 mb-1 text-xs sm:text-sm">Nueva Contraseña</label>
+                  <input
+                    type="password"
+                    placeholder="Dejar vacío para mantener la actual"
+                    value={settings.admin_password || ''}
+                    onChange={(e) => setSettings({ ...settings, admin_password: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                  />
+                </div>
               </div>
             </div>
 
