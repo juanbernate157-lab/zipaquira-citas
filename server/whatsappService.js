@@ -18,7 +18,7 @@ function formatWhatsAppBookingMessage(appointment, settings, baseUrl) {
     `* Lugar: ${address}`,
     appointment.client_notes ? `* Notas: "${appointment.client_notes}"` : null,
     ``,
-    `👉 Ver en el Sistema: ${baseUrl}/cita/${appointment.code}`
+    `* Ver en el Sistema: ${baseUrl}/cita/${appointment.code}`
   ].filter(Boolean).join('\n');
 }
 

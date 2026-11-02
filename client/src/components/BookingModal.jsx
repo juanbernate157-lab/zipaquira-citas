@@ -91,30 +91,6 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
       setIcsDownloadUrl(data.ics_url || `/api/appointments/${data.appointment.code}/ics`);
       setStep(3); // Success step
 
-      // Automatically open WhatsApp to notify administrator directly
-      if (data.admin_whatsapp_url) {
-        try {
-          const waWindow = window.open(data.admin_whatsapp_url, '_blank', 'noopener,noreferrer');
-          if (!waWindow || waWindow.closed || typeof waWindow.closed === 'undefined') {
-            console.log('Popup de WhatsApp bloqueado por el navegador; botón destacado activo.');
-          }
-        } catch (e) {
-          console.log('Error abriendo WhatsApp automáticamente:', e);
-        }
-      }
-
-      // Automatically trigger calendar invite download with 30-min reminder
-      try {
-        const downloadLink = document.createElement('a');
-        downloadLink.href = data.ics_url || `/api/appointments/${data.appointment.code}/ics`;
-        downloadLink.download = `cita-${data.appointment.code}.ics`;
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        document.body.removeChild(downloadLink);
-      } catch (err) {
-        console.log('Auto-download calendar notice:', err);
-      }
-
       // Celebrate with confetti
       try {
         confetti({
@@ -551,33 +527,34 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                 </div>
               </div>
 
-              {/* Primary Action: Direct WhatsApp Notification to Administrator */}
-              <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/60 to-emerald-50 border-2 border-emerald-500 rounded-3xl p-5 text-center space-y-3.5 shadow-xl shadow-emerald-600/10 animate-fade-in">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
-                  <span className="text-xs font-black uppercase text-emerald-900 tracking-wider">
-                    Notificación Directa al WhatsApp del Administrador
-                  </span>
-                </div>
-                
-                <div>
-                  <h4 className="text-base font-black text-emerald-950 flex items-center justify-center gap-1.5">
-                    <span>📲 Avisar al Administrador por WhatsApp</span>
-                  </h4>
-                  <p className="text-xs text-emerald-800 mt-1 font-medium">
-                    Haz clic en el botón verde para enviar los datos de tu cita directamente al WhatsApp de RUFO Precise Detailing ({settings?.whatsapp || settings?.phone || '+57 300 604 2818'}) y asegurar tu cupo de inmediato.
-                  </p>
+              {/* Automated Notification Status to Business */}
+              <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/40 to-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 text-left space-y-2.5 shadow-sm">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-emerald-950 flex items-center gap-1.5">
+                      <span>Notificación Enviada al Administrador</span>
+                      <span className="text-[10px] bg-emerald-600 text-white font-black px-2 py-0.5 rounded-full">Automático</span>
+                    </h4>
+                    <p className="text-[11px] text-emerald-800 font-medium">
+                      El administrador (Pedrito) ya ha recibido los detalles de tu cita. No necesitas enviar confirmaciones adicionales.
+                    </p>
+                  </div>
                 </div>
 
-                <a
-                  href={adminWhatsappUrl || `https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🏎️ *¡NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING!* 🏎️\n\n📋 *Código:* ${confirmedBooking.code}\n👤 *Cliente:* ${confirmedBooking.client_name}\n📞 *Teléfono:* ${confirmedBooking.client_phone}\n🚗 *Servicio:* ${confirmedBooking.service_name}\n📅 *Fecha:* ${confirmedBooking.appointment_date}\n⏰ *Hora:* ${confirmedBooking.appointment_time}\n💰 *Valor:* ${priceFormatted}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full py-4 px-5 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/40 transition hover:scale-[1.02] active:scale-95 text-center cursor-pointer"
-                >
-                  <MessageCircle className="w-6 h-6 fill-white text-emerald-700" />
-                  <span>👉 ENVIAR CITA A WHATSAPP DEL ADMINISTRADOR</span>
-                </a>
+                <div className="pt-1 border-t border-emerald-200">
+                  <a
+                    href={`https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, acabo de agendar una cita en RUFO Precise Detailing con el codigo ${confirmedBooking.code} para ${confirmedBooking.service_name}.`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <span>¿Tienes alguna pregunta? Chatear con nosotros por WhatsApp</span>
+                  </a>
+                </div>
               </div>
 
               {/* Calendar Automation Card with 30m Reminder */}
