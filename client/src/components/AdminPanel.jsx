@@ -2656,22 +2656,22 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
             <div className="p-4 bg-emerald-950/40 border border-emerald-500/30 rounded-2xl text-xs text-gray-300 space-y-2.5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="font-extrabold text-emerald-300">
-                  ⚡ ¿Cómo activar el WhatsApp automático en 20 segundos? (100% Gratis)
+                  ⚡ ¿Cómo activar el WhatsApp automático en 10 segundos? (100% Gratis)
                 </span>
                 <a
-                  href="https://wa.me/34684723962?text=I%20allow%20callmebot%20to%20send%20me%20messages"
+                  href="https://wa.me/34623786449?text=I%20allow%20callmebot%20to%20send%20me%20messages"
                   target="_blank"
                   rel="noreferrer"
                   className="px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/30 transition hover:scale-105"
                 >
                   <MessageCircle className="w-4 h-4 fill-white text-emerald-700" />
-                  <span>👉 Toca aquí para obtener tu Clave (1 Clic)</span>
+                  <span>👉 Toca aquí para obtener la Clave de Pedrito</span>
                 </a>
               </div>
               <ol className="list-decimal pl-4 space-y-1 text-gray-300 text-[11px]">
-                <li>Toca el botón verde de arriba o abre WhatsApp desde el celular <strong>+57 300 604 2818</strong> y envía este mensaje a <strong>+34 684 72 39 62</strong>: <code className="bg-black/60 px-1 py-0.5 rounded text-emerald-300">I allow callmebot to send me messages</code></li>
+                <li>Toca el botón verde o desde el celular de Pedrito (<strong>+57 300 604 2818</strong>) envía por WhatsApp este mensaje a <strong>+34 623 78 64 49</strong>: <code className="bg-black/60 px-1 py-0.5 rounded text-emerald-300">I allow callmebot to send me messages</code></li>
                 <li>En pocos segundos el bot te responderá: <em>"API Activated for your phone number. Your APIKEY is XXXXXX"</em>.</li>
-                <li>Copia ese número de API Key, pégalo en la casilla de arriba y pulsa <strong>Guardar Configuración</strong>.</li>
+                <li>Pega ese número de 6 dígitos en la casilla <strong>API Key de CallMeBot</strong> de arriba y pulsa <strong>Guardar Ajustes</strong>.</li>
               </ol>
             </div>
 

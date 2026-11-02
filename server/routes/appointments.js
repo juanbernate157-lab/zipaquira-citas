@@ -410,6 +410,7 @@ router.post('/', async (req, res) => {
       google_calendar_url: googleCalendarUrl,
       admin_whatsapp_url: adminWhatsappUrl,
       ics_url: `${baseUrl}/api/appointments/${newAppointment.code}/ics`,
+      whatsapp_auto_sent: Boolean(settings.callmebot_api_key && settings.callmebot_api_key.trim()),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

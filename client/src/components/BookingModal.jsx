@@ -25,6 +25,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
   const [googleCalUrl, setGoogleCalUrl] = useState('');
   const [adminWhatsappUrl, setAdminWhatsappUrl] = useState('');
   const [icsDownloadUrl, setIcsDownloadUrl] = useState('');
+  const [whatsappAutoSent, setWhatsappAutoSent] = useState(false);
 
   // Fetch available slots when date changes
   useEffect(() => {
@@ -89,7 +90,18 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
       setGoogleCalUrl(data.google_calendar_url || '');
       setAdminWhatsappUrl(data.admin_whatsapp_url || '');
       setIcsDownloadUrl(data.ics_url || `/api/appointments/${data.appointment.code}/ics`);
+      setWhatsappAutoSent(Boolean(data.whatsapp_auto_sent));
       setStep(3); // Success step
+
+      // Si el servidor aún no tiene configurada la API Key de CallMeBot para envío 100% automático en la nube,
+      // abrimos la ventana de WhatsApp para asegurar que Pedrito reciba la notificación de inmediato.
+      if (!data.whatsapp_auto_sent && data.admin_whatsapp_url) {
+        try {
+          window.open(data.admin_whatsapp_url, '_blank', 'noopener,noreferrer');
+        } catch (e) {
+          console.log('Popup de WhatsApp bloqueado por el navegador.');
+        }
+      }
 
       // Celebrate with confetti
       try {
@@ -527,35 +539,59 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                 </div>
               </div>
 
-              {/* Automated Notification Status to Business */}
-              <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/40 to-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 text-left space-y-2.5 shadow-sm">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
+              {/* WhatsApp Notification to Business */}
+              {whatsappAutoSent ? (
+                <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/40 to-emerald-50 border-2 border-emerald-400 rounded-2xl p-4 text-left space-y-2.5 shadow-sm">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-emerald-950 flex items-center gap-1.5">
+                        <span>Notificación Enviada al WhatsApp de Pedrito</span>
+                        <span className="text-[10px] bg-emerald-600 text-white font-black px-2 py-0.5 rounded-full">100% Automático</span>
+                      </h4>
+                      <p className="text-[11px] text-emerald-800 font-medium">
+                        El administrador ya ha recibido los detalles completos de tu cita directamente en su WhatsApp.
+                      </p>
+                    </div>
                   </div>
+
+                  <div className="pt-1 border-t border-emerald-200">
+                    <a
+                      href={`https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, acabo de agendar una cita en RUFO Precise Detailing con el codigo ${confirmedBooking.code} para ${confirmedBooking.service_name}.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+                    >
+                      <MessageCircle className="w-4 h-4 text-emerald-600" />
+                      <span>¿Tienes alguna pregunta? Chatear con nosotros por WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/60 to-emerald-50 border-2 border-[#25D366] rounded-2xl p-4 text-center space-y-3 shadow-md animate-fade-in">
                   <div>
-                    <h4 className="text-sm font-black text-emerald-950 flex items-center gap-1.5">
-                      <span>Notificación Enviada al Administrador</span>
-                      <span className="text-[10px] bg-emerald-600 text-white font-black px-2 py-0.5 rounded-full">Automático</span>
+                    <h4 className="text-sm font-black text-emerald-950 flex items-center justify-center gap-1.5">
+                      <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                      <span>Notificación al Administrador</span>
                     </h4>
-                    <p className="text-[11px] text-emerald-800 font-medium">
-                      El administrador (Pedrito) ya ha recibido los detalles de tu cita. No necesitas enviar confirmaciones adicionales.
+                    <p className="text-xs text-emerald-800 mt-1 font-medium">
+                      Toca el botón verde para asegurar que Pedrito reciba los datos de tu cita en su WhatsApp:
                     </p>
                   </div>
-                </div>
 
-                <div className="pt-1 border-t border-emerald-200">
                   <a
-                    href={`https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hola, acabo de agendar una cita en RUFO Precise Detailing con el codigo ${confirmedBooking.code} para ${confirmedBooking.service_name}.`)}`}
+                    href={adminWhatsappUrl || `https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`*NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING*\n\n* Codigo de Cita: ${confirmedBooking.code}\n* Cliente: ${confirmedBooking.client_name}\n* Telefono: ${confirmedBooking.client_phone}\n* Servicio: ${confirmedBooking.service_name}\n* Fecha: ${confirmedBooking.appointment_date}\n* Hora: ${confirmedBooking.appointment_time} (${confirmedBooking.service_duration} min)\n* Valor: ${priceFormatted}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-2.5 px-3 rounded-xl bg-white hover:bg-emerald-50 border border-emerald-300 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition hover:scale-[1.02] active:scale-95 text-center cursor-pointer"
                   >
-                    <MessageCircle className="w-4 h-4 text-emerald-600" />
-                    <span>¿Tienes alguna pregunta? Chatear con nosotros por WhatsApp</span>
+                    <MessageCircle className="w-5 h-5 fill-white text-emerald-700" />
+                    <span>👉 ENVIAR CITA A WHATSAPP DEL ADMINISTRADOR</span>
                   </a>
                 </div>
-              </div>
+              )}
 
               {/* Calendar Automation Card with 30m Reminder */}
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-4 text-left space-y-3 shadow-md">
