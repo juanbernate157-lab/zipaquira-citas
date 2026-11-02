@@ -4,7 +4,8 @@ import {
   Plus, Edit2, Trash2, Settings as SettingsIcon, Mail, QrCode, Search,
   Filter, Phone, ExternalLink, Shield, Save, Eye, Bell,
   Sparkles, AlertCircle, Lock, User, KeyRound, Zap, ArrowRight,
-  Flame, Gauge, Check, Sun, Sunset, Ban, CheckCircle2, AlertTriangle, RotateCcw
+  Flame, Gauge, Check, Sun, Sunset, Ban, CheckCircle2, AlertTriangle, RotateCcw,
+  MapPin, MessageCircle
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
