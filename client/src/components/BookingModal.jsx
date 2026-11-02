@@ -23,6 +23,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
   const [submitError, setSubmitError] = useState('');
   const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [googleCalUrl, setGoogleCalUrl] = useState('');
+  const [adminWhatsappUrl, setAdminWhatsappUrl] = useState('');
   const [icsDownloadUrl, setIcsDownloadUrl] = useState('');
 
   // Fetch available slots when date changes
@@ -86,18 +87,19 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
 
       setConfirmedBooking(data.appointment);
       setGoogleCalUrl(data.google_calendar_url || '');
+      setAdminWhatsappUrl(data.admin_whatsapp_url || '');
       setIcsDownloadUrl(data.ics_url || `/api/appointments/${data.appointment.code}/ics`);
       setStep(3); // Success step
 
-      // Automatically open Google Calendar in a new tab to save with 30m reminder
-      if (data.google_calendar_url) {
+      // Automatically open WhatsApp to notify administrator directly
+      if (data.admin_whatsapp_url) {
         try {
-          const calWindow = window.open(data.google_calendar_url, '_blank', 'noopener,noreferrer');
-          if (!calWindow || calWindow.closed || typeof calWindow.closed === 'undefined') {
-            console.log('Popup bloqueado por navegador, el botón manual está visible.');
+          const waWindow = window.open(data.admin_whatsapp_url, '_blank', 'noopener,noreferrer');
+          if (!waWindow || waWindow.closed || typeof waWindow.closed === 'undefined') {
+            console.log('Popup de WhatsApp bloqueado por el navegador; botón destacado activo.');
           }
         } catch (e) {
-          console.log('Error abriendo Google Calendar automáticamente:', e);
+          console.log('Error abriendo WhatsApp automáticamente:', e);
         }
       }
 
@@ -549,18 +551,34 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
                 </div>
               </div>
 
-              {/* Direct WhatsApp Confirmation Button */}
-              {(settings?.whatsapp || settings?.phone) && (
+              {/* Primary Action: Direct WhatsApp Notification to Administrator */}
+              <div className="bg-gradient-to-r from-emerald-50 via-emerald-100/60 to-emerald-50 border-2 border-emerald-500 rounded-3xl p-5 text-center space-y-3.5 shadow-xl shadow-emerald-600/10 animate-fade-in">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+                  <span className="text-xs font-black uppercase text-emerald-900 tracking-wider">
+                    Notificación Directa al WhatsApp del Administrador
+                  </span>
+                </div>
+                
+                <div>
+                  <h4 className="text-base font-black text-emerald-950 flex items-center justify-center gap-1.5">
+                    <span>📲 Avisar al Administrador por WhatsApp</span>
+                  </h4>
+                  <p className="text-xs text-emerald-800 mt-1 font-medium">
+                    Haz clic en el botón verde para enviar los datos de tu cita directamente al WhatsApp de RUFO Precise Detailing ({settings?.whatsapp || settings?.phone || '+57 300 604 2818'}) y asegurar tu cupo de inmediato.
+                  </p>
+                </div>
+
                 <a
-                  href={`https://wa.me/${(settings?.whatsapp || settings?.phone).replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`¡Hola RUFO Precise Detailing! Acabo de agendar una cita en la web:\n\n📋 Código: ${confirmedBooking.code}\n👤 Cliente: ${confirmedBooking.client_name}\n🚗 Servicio: ${confirmedBooking.service_name}\n📅 Fecha y Hora: ${confirmedBooking.appointment_date} a las ${confirmedBooking.appointment_time}\n💰 Valor: ${priceFormatted}`)}`}
+                  href={adminWhatsappUrl || `https://wa.me/${(settings?.whatsapp || settings?.phone || '573006042818').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`🏎️ *¡NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING!* 🏎️\n\n📋 *Código:* ${confirmedBooking.code}\n👤 *Cliente:* ${confirmedBooking.client_name}\n📞 *Teléfono:* ${confirmedBooking.client_phone}\n🚗 *Servicio:* ${confirmedBooking.service_name}\n📅 *Fecha:* ${confirmedBooking.appointment_date}\n⏰ *Hora:* ${confirmedBooking.appointment_time}\n💰 *Valor:* ${priceFormatted}`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3.5 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition hover:scale-[1.01] active:scale-95 text-center cursor-pointer"
+                  className="w-full py-4 px-5 rounded-2xl bg-[#25D366] hover:bg-[#20ba5a] text-white font-black text-sm flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-500/40 transition hover:scale-[1.02] active:scale-95 text-center cursor-pointer"
                 >
-                  <MessageCircle className="w-5 h-5 text-white" />
-                  <span>📲 Enviar Comprobante por WhatsApp a RUFO</span>
+                  <MessageCircle className="w-6 h-6 fill-white text-emerald-700" />
+                  <span>👉 ENVIAR CITA A WHATSAPP DEL ADMINISTRADOR</span>
                 </a>
-              )}
+              </div>
 
               {/* Calendar Automation Card with 30m Reminder */}
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-400 rounded-2xl p-4 text-left space-y-3 shadow-md">

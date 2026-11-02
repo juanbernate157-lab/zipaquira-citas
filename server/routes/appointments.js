@@ -386,6 +386,23 @@ router.post('/', async (req, res) => {
     const settings = getSettings();
     const googleCalendarUrl = createGoogleCalendarUrl(newAppointment, settings);
 
+    // Build direct WhatsApp notification URL for the administrator
+    const adminPhone = (settings.whatsapp || settings.phone || '573006042818').replace(/[^0-9]/g, '');
+    const priceFormatted = `${settings.currency_symbol || '$'} ${Number(newAppointment.service_price).toLocaleString()} ${settings.currency_code || 'COP'}`;
+    const waText = `🏎️ *¡NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING!* 🏎️\n\n` +
+      `📋 *Código de Cita:* ${newAppointment.code}\n` +
+      `👤 *Cliente:* ${newAppointment.client_name}\n` +
+      `📞 *Teléfono Cliente:* ${newAppointment.client_phone}\n` +
+      `🚗 *Servicio:* ${newAppointment.service_name}\n` +
+      `📅 *Fecha:* ${newAppointment.appointment_date}\n` +
+      `⏰ *Hora:* ${newAppointment.appointment_time} (${newAppointment.service_duration} min)\n` +
+      `💰 *Valor a Cobrar:* ${priceFormatted}\n` +
+      `📍 *Lugar:* ${settings.address || 'Calle 5 # 10-25'}, ${settings.city || 'Zipaquirá'}\n` +
+      (newAppointment.client_notes ? `📝 *Notas:* "${newAppointment.client_notes}"\n\n` : '\n') +
+      `👉 *Gestionar en el Sistema:* ${baseUrl}/cita/${newAppointment.code}`;
+
+    const adminWhatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waText)}`;
+
     // Send emails in background (Admin notification first, then client confirmation)
     Promise.allSettled([
       sendAdminNewBookingNotification(newAppointment, baseUrl),
@@ -398,6 +415,7 @@ router.post('/', async (req, res) => {
       appointment: newAppointment,
       manage_url: `${baseUrl}/cita/${newAppointment.code}`,
       google_calendar_url: googleCalendarUrl,
+      admin_whatsapp_url: adminWhatsappUrl,
       ics_url: `${baseUrl}/api/appointments/${newAppointment.code}/ics`,
     });
   } catch (error) {
