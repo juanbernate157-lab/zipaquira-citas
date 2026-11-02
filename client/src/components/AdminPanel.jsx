@@ -917,6 +917,181 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
               </div>
             </div>
 
+            {/* ======================================================== */}
+            {/* MONITOR DE TURNOS EN VIVO (QUIÉN LE TOCA Y QUIÉN SIGUE) */}
+            {/* ======================================================== */}
+            {(() => {
+              const activeUpcoming = [...appointments]
+                .filter(a => a.status === 'confirmed' || a.status === 'rescheduled')
+                .sort((a, b) => {
+                  const dateTimeA = `${a.appointment_date}T${a.appointment_time || '00:00'}`;
+                  const dateTimeB = `${b.appointment_date}T${b.appointment_time || '00:00'}`;
+                  return dateTimeA.localeCompare(dateTimeB);
+                });
+
+              const currentTurn = activeUpcoming[0] || null;
+              const nextTurn = activeUpcoming[1] || null;
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Tarjeta 1: 🟢 EN TURNO / LE TOCA AHORA */}
+                  <div className={`p-5 rounded-3xl border-2 transition shadow-xl flex flex-col justify-between ${
+                    currentTurn 
+                      ? 'bg-gradient-to-br from-emerald-950/80 via-emerald-900/40 to-black border-emerald-400 shadow-emerald-950/50' 
+                      : 'bg-[#0a0f22] border-blue-900/40 opacity-70'
+                  }`}>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-emerald-400 text-black flex items-center gap-1.5 shadow-md shadow-emerald-400/40 animate-pulse">
+                          <span className="w-2 h-2 rounded-full bg-black"></span>
+                          🟢 LE TOCA EL TURNO (ACTUAL)
+                        </span>
+                        {currentTurn && (
+                          <span className="font-mono text-xs font-black text-emerald-300 bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-500/50">
+                            {currentTurn.code}
+                          </span>
+                        )}
+                      </div>
+
+                      {currentTurn ? (
+                        <div className="space-y-2">
+                          <div className="text-xl font-black text-white tracking-tight">{currentTurn.client_name}</div>
+                          <div className="text-xs text-emerald-200 font-bold flex items-center gap-2">
+                            <span>🚗 {currentTurn.service_name}</span>
+                            <span>•</span>
+                            <span className="text-emerald-400 font-black">${Number(currentTurn.service_price).toLocaleString()}</span>
+                          </div>
+                          <div className="text-xs text-gray-300 flex items-center gap-3 pt-1">
+                            <span className="bg-emerald-900/60 text-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                              ⏰ {currentTurn.appointment_time} ({currentTurn.appointment_date})
+                            </span>
+                            <a
+                              href={`https://wa.me/${currentTurn.client_phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-emerald-400 hover:underline flex items-center gap-1 font-bold text-xs"
+                            >
+                              <Phone className="w-3 h-3 text-emerald-400" />
+                              <span>{currentTurn.client_phone}</span>
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-6 text-center text-xs text-gray-400 font-bold">
+                          No hay turnos activos pendientes en este momento.
+                        </div>
+                      )}
+                    </div>
+
+                    {currentTurn && (
+                      <div className="pt-4 border-t border-emerald-500/30 mt-3">
+                        <button
+                          onClick={() => handleUpdateAppStatus(currentTurn.id, 'completed')}
+                          className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/30 transition cursor-pointer"
+                        >
+                          <CheckCircle className="w-4 h-4 text-black" />
+                          <span>Marcar como Atendido / Completado</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tarjeta 2: 🟡 SIGUE EN FILA (PRÓXIMO TURNO) */}
+                  <div className={`p-5 rounded-3xl border-2 transition shadow-xl flex flex-col justify-between ${
+                    nextTurn 
+                      ? 'bg-gradient-to-br from-amber-950/80 via-amber-900/40 to-black border-amber-400 shadow-amber-950/50' 
+                      : 'bg-[#0a0f22] border-blue-900/40 opacity-70'
+                  }`}>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase bg-amber-400 text-black flex items-center gap-1.5 shadow-md shadow-amber-400/40">
+                          <span className="w-2 h-2 rounded-full bg-black"></span>
+                          🟡 SIGUE EN FILA (PRÓXIMO)
+                        </span>
+                        {nextTurn && (
+                          <span className="font-mono text-xs font-black text-amber-300 bg-amber-950 px-2.5 py-0.5 rounded-full border border-amber-500/50">
+                            {nextTurn.code}
+                          </span>
+                        )}
+                      </div>
+
+                      {nextTurn ? (
+                        <div className="space-y-2">
+                          <div className="text-xl font-black text-white tracking-tight">{nextTurn.client_name}</div>
+                          <div className="text-xs text-amber-200 font-bold flex items-center gap-2">
+                            <span>🚗 {nextTurn.service_name}</span>
+                            <span>•</span>
+                            <span className="text-amber-400 font-black">${Number(nextTurn.service_price).toLocaleString()}</span>
+                          </div>
+                          <div className="text-xs text-gray-300 flex items-center gap-3 pt-1">
+                            <span className="bg-amber-900/60 text-amber-300 px-2 py-0.5 rounded-md font-bold">
+                              ⏰ {nextTurn.appointment_time} ({nextTurn.appointment_date})
+                            </span>
+                            <a
+                              href={`https://wa.me/${nextTurn.client_phone.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-amber-300 hover:underline flex items-center gap-1 font-bold text-xs"
+                            >
+                              <Phone className="w-3 h-3 text-amber-400" />
+                              <span>{nextTurn.client_phone}</span>
+                            </a>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="py-6 text-center text-xs text-gray-400 font-bold">
+                          No hay más turnos en cola de espera.
+                        </div>
+                      )}
+                    </div>
+
+                    {nextTurn && (
+                      <div className="pt-4 border-t border-amber-500/30 mt-3">
+                        <button
+                          onClick={() => handleSendReminder(nextTurn.id)}
+                          disabled={sendingReminderId === nextTurn.id}
+                          className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/30 transition cursor-pointer"
+                        >
+                          <Bell className="w-4 h-4 text-black" />
+                          <span>{sendingReminderId === nextTurn.id ? 'Avisando...' : 'Avisar que ya casi es su turno'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tarjeta 3: 🔴 RESUMEN & GUÍA DE IDENTIFICACIÓN */}
+                  <div className="p-5 rounded-3xl border border-blue-900/40 bg-[#0a0f22] shadow-xl flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between border-b border-blue-900/40 pb-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-gray-200">
+                        🚦 Guía de Colores de Turnos
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-red-500/20 text-red-400 border border-red-500/30">
+                        {stats.cancelled || 0} Canceladas
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40">
+                        <span className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0 animate-pulse" />
+                        <span className="text-emerald-300 font-black">Verde:</span>
+                        <span className="text-gray-300 text-[11px]">Le toca el turno ahora (en atención)</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-amber-950/40 border border-amber-500/40">
+                        <span className="w-3 h-3 rounded-full bg-amber-400 flex-shrink-0" />
+                        <span className="text-amber-300 font-black">Amarillo:</span>
+                        <span className="text-gray-300 text-[11px]">Es el que sigue en la fila (próximo turno)</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 p-2 rounded-xl bg-red-950/40 border border-red-500/40">
+                        <span className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0" />
+                        <span className="text-red-300 font-black">Rojo:</span>
+                        <span className="text-gray-300 text-[11px]">Turno cancelado (cupo liberado)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Appointments Table */}
             <div className="bg-[#0a0f22] rounded-3xl border border-blue-900/40 shadow-xl overflow-hidden">
               <div className="px-6 py-4 border-b border-blue-900/40 flex items-center justify-between">
@@ -959,127 +1134,219 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                         </td>
                       </tr>
                     ) : (
-                      appointments.map((app) => {
-                        const creationDate = new Date(app.created_at);
-                        const creationFormatted = creationDate.toLocaleString('es-CO', {
-                          dateStyle: 'short',
-                          timeStyle: 'short',
-                        });
+                      (() => {
+                        const activeUpcoming = [...appointments]
+                          .filter(a => a.status === 'confirmed' || a.status === 'rescheduled')
+                          .sort((a, b) => {
+                            const dateTimeA = `${a.appointment_date}T${a.appointment_time || '00:00'}`;
+                            const dateTimeB = `${b.appointment_date}T${b.appointment_time || '00:00'}`;
+                            return dateTimeA.localeCompare(dateTimeB);
+                          });
 
-                        return (
-                          <tr key={app.id} className="hover:bg-blue-950/20 transition">
-                            {/* Code */}
-                            <td className="px-5 py-4 font-mono font-black text-cyan-400">
-                              {app.code}
-                            </td>
+                        const currentTurn = activeUpcoming[0] || null;
+                        const nextTurn = activeUpcoming[1] || null;
 
-                            {/* Client */}
-                            <td className="px-5 py-4">
-                              <div className="font-bold text-white">{app.client_name}</div>
-                              <div className="text-gray-400 text-xs">{app.client_email}</div>
-                              <div className="mt-0.5">
-                                <a
-                                  href={`https://wa.me/${app.client_phone.replace(/[^0-9]/g, '')}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-green-400 hover:underline inline-flex items-center gap-1 text-[11px] font-bold"
-                                >
-                                  <Phone className="w-3 h-3 text-green-400" />
-                                  <span>{app.client_phone}</span>
-                                </a>
-                              </div>
-                            </td>
+                        return appointments.map((app) => {
+                          const creationDate = new Date(app.created_at);
+                          const creationFormatted = creationDate.toLocaleString('es-CO', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          });
 
-                            {/* Service */}
-                            <td className="px-5 py-4">
-                              <div className="font-bold text-gray-200">{app.service_name}</div>
-                              <div className="text-cyan-400 font-extrabold text-xs">
-                                ${Number(app.service_price).toLocaleString()}
-                              </div>
-                              <div className="text-gray-500 text-[11px]">{app.service_duration} min</div>
-                            </td>
+                          const isCurrentTurn = app.id === currentTurn?.id;
+                          const isNextTurn = app.id === nextTurn?.id;
+                          const isCancelled = app.status === 'cancelled';
+                          const isCompleted = app.status === 'completed';
 
-                            {/* Scheduled date */}
-                            <td className="px-5 py-4">
-                              <div className="font-black text-white">{app.appointment_date}</div>
-                              <div className="text-blue-400 font-bold text-xs">{app.appointment_time}</div>
-                            </td>
+                          let rowClass = 'hover:bg-blue-950/20';
+                          let borderClass = 'border-l-4 border-l-transparent';
+                          let badgeRender = (
+                            <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30 whitespace-nowrap">
+                              🔵 EN ESPERA
+                            </span>
+                          );
 
-                            {/* Audit creation timestamp */}
-                            <td className="px-5 py-4 bg-blue-950/30">
-                              <div className="font-bold text-cyan-300 flex items-center gap-1">
-                                <Clock className="w-3.5 h-3.5 text-cyan-400" />
-                                <span>{creationFormatted}</span>
-                              </div>
-                              <span className="text-[10px] text-gray-400 font-medium">Momento exacto del registro</span>
-                            </td>
-
-                            {/* Status */}
-                            <td className="px-5 py-4">
-                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase border ${statusBadges[app.status]?.bg || 'bg-gray-800 text-gray-300'}`}>
-                                {statusBadges[app.status]?.text || app.status}
+                          if (isCurrentTurn) {
+                            rowClass = 'bg-emerald-950/40 hover:bg-emerald-900/40 shadow-[inset_0_0_25px_rgba(16,185,129,0.12)]';
+                            borderClass = 'border-l-4 border-l-emerald-400';
+                            badgeRender = (
+                              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-500 text-black flex items-center gap-1.5 shadow-md shadow-emerald-500/40 animate-pulse whitespace-nowrap">
+                                <span className="w-2 h-2 rounded-full bg-black"></span>
+                                🟢 LE TOCA AHORA
                               </span>
-                            </td>
+                            );
+                          } else if (isNextTurn) {
+                            rowClass = 'bg-amber-950/30 hover:bg-amber-900/30 shadow-[inset_0_0_20px_rgba(245,158,11,0.1)]';
+                            borderClass = 'border-l-4 border-l-amber-400';
+                            badgeRender = (
+                              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-amber-400 text-black flex items-center gap-1.5 shadow-md shadow-amber-500/30 whitespace-nowrap">
+                                <span className="w-2 h-2 rounded-full bg-black"></span>
+                                🟡 SIGUE EN FILA
+                              </span>
+                            );
+                          } else if (isCancelled) {
+                            rowClass = 'bg-red-950/20 hover:bg-red-900/30 opacity-75';
+                            borderClass = 'border-l-4 border-l-red-500';
+                            badgeRender = (
+                              <span className="px-2.5 py-1 rounded-full text-xs font-black uppercase bg-red-500/20 text-red-400 border border-red-500/40 flex items-center gap-1 whitespace-nowrap">
+                                <XCircle className="w-3.5 h-3.5 text-red-400" />
+                                🔴 CANCELADO
+                              </span>
+                            );
+                          } else if (isCompleted) {
+                            rowClass = 'hover:bg-blue-950/20 opacity-60';
+                            badgeRender = (
+                              <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30 whitespace-nowrap">
+                                🟣 COMPLETADA
+                              </span>
+                            );
+                          }
 
-                            {/* 30m Reminder */}
-                            <td className="px-5 py-4">
-                              {app.reminder_sent ? (
-                                <span className="inline-flex items-center gap-1 text-green-400 font-bold text-xs">
-                                  <CheckCircle className="w-3.5 h-3.5" />
-                                  <span>Enviado</span>
+                          return (
+                            <tr key={app.id} className={`${rowClass} ${borderClass} transition`}>
+                              {/* Code */}
+                              <td className="px-5 py-4 font-mono font-black">
+                                <span className={
+                                  isCurrentTurn ? 'text-emerald-300 text-sm tracking-wider font-black' :
+                                  isNextTurn ? 'text-amber-300 text-sm tracking-wider font-black' :
+                                  isCancelled ? 'text-red-400 line-through' :
+                                  'text-cyan-400'
+                                }>
+                                  {app.code}
                                 </span>
-                              ) : (
-                                <button
-                                  onClick={() => handleSendReminder(app.id)}
-                                  disabled={sendingReminderId === app.id || app.status === 'cancelled'}
-                                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-bold transition flex items-center gap-1 disabled:opacity-40"
-                                  title="Enviar recordatorio de 30m por correo inmediatamente"
-                                >
-                                  <Bell className="w-3 h-3 text-amber-400" />
-                                  <span>{sendingReminderId === app.id ? 'Enviando...' : 'Enviar Ahora'}</span>
-                                </button>
-                              )}
-                            </td>
+                              </td>
 
-                            {/* Actions */}
-                            <td className="px-5 py-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                
-                                {/* 📅 Google Calendar Auto Add for Admin */}
-                                <a
-                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Cita: ${app.service_name} - ${app.client_name}`)}&dates=${app.appointment_date.replace(/-/g, '')}T${app.appointment_time.replace(/:/g, '')}00/${app.appointment_date.replace(/-/g, '')}T${app.appointment_time.replace(/:/g, '')}00&details=${encodeURIComponent(`Cita para ${app.service_name}.\nCliente: ${app.client_name}\nTeléfono: ${app.client_phone}\nCódigo: ${app.code}\nValor: $${Number(app.service_price).toLocaleString()} COP\nLugar: ${settings?.address || 'Calle 5 # 10-25'}\n\n* Recordatorio automático 30 min antes.`)}&location=${encodeURIComponent(settings?.address || 'Calle 5 # 10-25, Zipaquirá')}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="p-1.5 px-2.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 text-cyan-300 border border-blue-500/40 transition flex items-center gap-1 text-[11px] font-bold"
-                                  title="Guardar en tu Google Calendar con alarma 30m"
-                                >
-                                  <Calendar className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Calendar</span>
-                                </a>
-
-                                {app.status !== 'completed' && app.status !== 'cancelled' && (
-                                  <button
-                                    onClick={() => handleUpdateAppStatus(app.id, 'completed')}
-                                    className="p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/40 transition"
-                                    title="Marcar como Atendida"
+                              {/* Client */}
+                              <td className="px-5 py-4">
+                                <div className={`font-bold flex items-center gap-2 ${
+                                  isCurrentTurn ? 'text-emerald-100 font-black text-sm' :
+                                  isNextTurn ? 'text-amber-100 font-black text-sm' :
+                                  isCancelled ? 'text-red-300 line-through' :
+                                  'text-white'
+                                }`}>
+                                  <span>{app.client_name}</span>
+                                  {isCurrentTurn && (
+                                    <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/40 animate-pulse">
+                                      🟢 Turno 1
+                                    </span>
+                                  )}
+                                  {isNextTurn && (
+                                    <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/40">
+                                      🟡 Turno 2
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-gray-400 text-xs">{app.client_email}</div>
+                                <div className="mt-0.5">
+                                  <a
+                                    href={`https://wa.me/${app.client_phone.replace(/[^0-9]/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className={`hover:underline inline-flex items-center gap-1 text-[11px] font-bold ${
+                                      isCurrentTurn ? 'text-emerald-400' : isNextTurn ? 'text-amber-300' : 'text-green-400'
+                                    }`}
                                   >
-                                    <CheckCircle className="w-4 h-4" />
+                                    <Phone className="w-3 h-3" />
+                                    <span>{app.client_phone}</span>
+                                  </a>
+                                </div>
+                              </td>
+
+                              {/* Service */}
+                              <td className="px-5 py-4">
+                                <div className={`font-bold ${isCurrentTurn ? 'text-emerald-100' : isNextTurn ? 'text-amber-100' : 'text-gray-200'}`}>
+                                  {app.service_name}
+                                </div>
+                                <div className={`font-extrabold text-xs ${isCurrentTurn ? 'text-emerald-400 font-black' : isNextTurn ? 'text-amber-400 font-black' : 'text-cyan-400'}`}>
+                                  ${Number(app.service_price).toLocaleString()}
+                                </div>
+                                <div className="text-gray-500 text-[11px]">{app.service_duration} min</div>
+                              </td>
+
+                              {/* Scheduled date */}
+                              <td className="px-5 py-4">
+                                <div className={`font-black ${isCurrentTurn ? 'text-emerald-300' : isNextTurn ? 'text-amber-300' : isCancelled ? 'text-red-300 line-through' : 'text-white'}`}>
+                                  {app.appointment_date}
+                                </div>
+                                <div className={`font-bold text-xs ${isCurrentTurn ? 'text-emerald-400' : isNextTurn ? 'text-amber-400' : isCancelled ? 'text-red-400' : 'text-blue-400'}`}>
+                                  ⏰ {app.appointment_time}
+                                </div>
+                              </td>
+
+                              {/* Audit creation timestamp */}
+                              <td className="px-5 py-4 bg-blue-950/30">
+                                <div className="font-bold text-cyan-300 flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5 text-cyan-400" />
+                                  <span>{creationFormatted}</span>
+                                </div>
+                                <span className="text-[10px] text-gray-400 font-medium">Momento exacto del registro</span>
+                              </td>
+
+                              {/* Status with Distinct Colors */}
+                              <td className="px-5 py-4">
+                                {badgeRender}
+                              </td>
+
+                              {/* 30m Reminder */}
+                              <td className="px-5 py-4">
+                                {app.reminder_sent ? (
+                                  <span className="inline-flex items-center gap-1 text-green-400 font-bold text-xs">
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    <span>Enviado</span>
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handleSendReminder(app.id)}
+                                    disabled={sendingReminderId === app.id || app.status === 'cancelled'}
+                                    className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-bold transition flex items-center gap-1 disabled:opacity-40"
+                                    title="Enviar recordatorio de 30m por correo inmediatamente"
+                                  >
+                                    <Bell className="w-3 h-3 text-amber-400" />
+                                    <span>{sendingReminderId === app.id ? 'Enviando...' : 'Enviar Ahora'}</span>
                                   </button>
                                 )}
-                                {app.status !== 'cancelled' && (
-                                  <button
-                                    onClick={() => handleUpdateAppStatus(app.id, 'cancelled')}
-                                    className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition"
-                                    title="Cancelar Cita"
+                              </td>
+
+                              {/* Actions */}
+                              <td className="px-5 py-4 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  
+                                  {/* 📅 Google Calendar Auto Add for Admin */}
+                                  <a
+                                    href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Cita: ${app.service_name} - ${app.client_name}`)}&dates=${app.appointment_date.replace(/-/g, '')}T${app.appointment_time.replace(/:/g, '')}00/${app.appointment_date.replace(/-/g, '')}T${app.appointment_time.replace(/:/g, '')}00&details=${encodeURIComponent(`Cita para ${app.service_name}.\nCliente: ${app.client_name}\nTeléfono: ${app.client_phone}\nCódigo: ${app.code}\nValor: $${Number(app.service_price).toLocaleString()} COP\nLugar: ${settings?.address || 'Calle 5 # 10-25'}\n\n* Recordatorio automático 30 min antes.`)}&location=${encodeURIComponent(settings?.address || 'Calle 5 # 10-25, Zipaquirá')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 px-2.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/40 text-cyan-300 border border-blue-500/40 transition flex items-center gap-1 text-[11px] font-bold"
+                                    title="Guardar en tu Google Calendar con alarma 30m"
                                   >
-                                    <XCircle className="w-4 h-4" />
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
+                                    <Calendar className="w-3.5 h-3.5" />
+                                    <span className="hidden sm:inline">Calendar</span>
+                                  </a>
+
+                                  {app.status !== 'completed' && app.status !== 'cancelled' && (
+                                    <button
+                                      onClick={() => handleUpdateAppStatus(app.id, 'completed')}
+                                      className="p-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-300 border border-green-500/40 transition"
+                                      title="Marcar como Atendida"
+                                    >
+                                      <CheckCircle className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {app.status !== 'cancelled' && (
+                                    <button
+                                      onClick={() => handleUpdateAppStatus(app.id, 'cancelled')}
+                                      className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 transition"
+                                      title="Cancelar Cita"
+                                    >
+                                      <XCircle className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        });
+                      })()
                     )}
                   </tbody>
                 </table>
