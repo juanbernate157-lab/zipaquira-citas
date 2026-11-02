@@ -132,6 +132,18 @@ function initDb() {
     // Column already exists
   }
 
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN google_script_url TEXT DEFAULT '';`);
+  } catch (e) {
+    // Column already exists
+  }
+
+  try {
+    db.exec(`ALTER TABLE settings ADD COLUMN brevo_api_key TEXT DEFAULT '';`);
+  } catch (e) {
+    // Column already exists
+  }
+
   // Ensure all image and logo URLs are complete absolute HTTPS URLs
   try {
     db.exec(`

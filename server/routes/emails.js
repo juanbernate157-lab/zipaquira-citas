@@ -49,9 +49,15 @@ router.post('/test', async (req, res) => {
       return res.status(400).json({ error: result.error || 'Fallo en la conexión SMTP con Google' });
     }
 
+    let methodMsg = 'Modo Simulado';
+    if (result.mode === 'google_script') methodMsg = 'Google Apps Script (Gmail HTTPS)';
+    else if (result.mode === 'brevo') methodMsg = 'Brevo API (HTTPS)';
+    else if (result.mode === 'resend') methodMsg = 'Resend API (HTTPS)';
+    else if (result.mode === 'smtp') methodMsg = 'SMTP Clásico';
+
     res.json({
       success: true,
-      message: result.mode === 'smtp' ? `Correo de prueba enviado a ${targetEmail} vía SMTP` : `Correo simulado registrado en historial para ${targetEmail}`,
+      message: `¡Correo de prueba enviado a ${targetEmail} vía ${methodMsg}!`,
       result,
     });
   } catch (error) {

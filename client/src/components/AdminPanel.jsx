@@ -44,6 +44,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
   const [settingsError, setSettingsError] = useState('');
   const [testingEmail, setTestingEmail] = useState(false);
   const [testEmailMsg, setTestEmailMsg] = useState('');
+  const [copiedScript, setCopiedScript] = useState(false);
 
   // Schedules & Cancellations Management state
   const [scheduleSlots, setScheduleSlots] = useState([]);
@@ -2229,58 +2230,152 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
               </div>
             </div>
 
-            {/* SMTP Server Configuration */}
-            <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-4">
-              <div className="flex items-center justify-between border-b border-blue-900/40 pb-3">
+            {/* SMTP & HTTP API Mail Server Configuration */}
+            <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-blue-900/40 pb-4 gap-2">
                 <div>
-                  <h4 className="font-extrabold text-white text-base">Servidor de Envíos de Correo Real</h4>
-                  <p className="text-xs text-gray-400">
-                    {settings.resend_api_key || settings.smtp_enabled 
-                      ? '🟢 Envío por Internet HABILITADO. Los correos se entregan a Gmail, Outlook y bandejas de entrada reales.' 
-                      : '🟡 Modo Simulación ACTIVO. Los correos quedan registrados en el Buzón de Auditoría pero NO se envían a Internet hasta configurar tu clave.'}
+                  <h4 className="font-extrabold text-white text-base">Servidores de Envío Automático de Correos</h4>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Envía notificaciones automáticas tanto al cliente como al administrador ({settings.admin_notification_email || settings.contact_email || 'ru88foramirez@hotmail.com'}).
                   </p>
+                </div>
+                <div>
+                  {settings.google_script_url ? (
+                    <span className="text-[11px] font-black uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Google Script Webhook Activo
+                    </span>
+                  ) : settings.brevo_api_key ? (
+                    <span className="text-[11px] font-black uppercase bg-blue-500/20 text-blue-400 border border-blue-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+                      Brevo API Activo
+                    </span>
+                  ) : settings.resend_api_key ? (
+                    <span className="text-[11px] font-black uppercase bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                      Resend API Activo
+                    </span>
+                  ) : settings.smtp_enabled ? (
+                    <span className="text-[11px] font-black uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40 px-3 py-1 rounded-full flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      SMTP Activo
+                    </span>
+                  ) : (
+                    <span className="text-[11px] font-black uppercase bg-gray-700 text-gray-300 px-3 py-1 rounded-full">
+                      🟡 Modo Simulación
+                    </span>
+                  )}
                 </div>
               </div>
 
-              {/* METODO 1: RESEND API (HTTPS - 100% COMPATIBLE CON RENDER FREE) */}
-              <div className="p-4 bg-gradient-to-r from-emerald-950/60 via-blue-950/70 to-indigo-950/60 border-2 border-emerald-500/40 rounded-2xl space-y-3">
+              {/* OPCION 1: WEBHOOK DE GOOGLE APPS SCRIPT (RECOMENDADA • 100% GRATIS • SIN LÍMITE DE DOMINIO) */}
+              <div className="p-4 bg-gradient-to-r from-emerald-950/70 via-blue-950/80 to-indigo-950/70 border-2 border-emerald-500/50 rounded-2xl space-y-3 shadow-lg">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
                     <h5 className="font-extrabold text-white text-sm">
-                      Método 1: Resend API (Recomendado para Render • 100% Gratis 3,000 correos/mes)
+                      Opción 1 (Recomendada): Webhook de Google Apps Script (Gmail)
                     </h5>
                   </div>
-                  <span className="text-[10px] font-black uppercase bg-emerald-500 text-black px-2 py-0.5 rounded-full">
-                    Garantizado en la Nube
+                  <span className="text-[10px] font-black uppercase bg-emerald-400 text-black px-2.5 py-0.5 rounded-full shadow">
+                    100% Automático • Sin Restricciones
                   </span>
                 </div>
-                <p className="text-xs text-emerald-200">
-                  Render en su plan gratuito bloquea los puertos tradicionales de Gmail (465 y 587). Con <strong>Resend</strong> los correos se envían por HTTPS (puerto web estándar 443) y llegan a cualquier correo al instante sin bloqueos.
+                <p className="text-xs text-emerald-100 leading-relaxed">
+                  Envía correos directamente desde tu Gmail (<strong>juanbernate157@gmail.com</strong>) a <strong>cualquier cliente</strong> y a <strong>ru88foramirez@hotmail.com</strong> de forma automática por el puerto 443 HTTPS (nunca se bloquea en Render). No requiere contraseñas de Hotmail ni dominios de pago.
                 </p>
+
                 <div>
                   <label className="block font-bold text-gray-200 text-xs mb-1">
-                    API Key de Resend (empieza por re_...)
+                    URL de la Aplicación Web de Google Script (termina en /exec)
                   </label>
                   <input
-                    type="password"
-                    placeholder="re_1234567890abcdef..."
-                    value={settings.resend_api_key || ''}
-                    onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-emerald-500/50 text-white font-mono text-xs"
+                    type="text"
+                    placeholder="https://script.google.com/macros/s/AKfycb.../exec"
+                    value={settings.google_script_url || ''}
+                    onChange={(e) => setSettings({ ...settings, google_script_url: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/60 border border-emerald-500/60 text-white font-mono text-xs focus:ring-2 focus:ring-emerald-400 focus:outline-none"
                   />
                 </div>
-                <div className="text-[11px] text-gray-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-1 border-t border-emerald-500/20">
-                  <span>👉 Entra a <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-black">resend.com</a> e inicia sesión con tu GitHub (1 clic).</span>
-                  <span className="text-emerald-400 font-bold">Copia tu API Key gratis y pégala aquí.</span>
+
+                <div className="p-3 bg-black/40 rounded-xl border border-emerald-500/20 text-[11px] text-gray-300 space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="font-black text-emerald-300">⚡ Guía de 1 minuto para activar Google Apps Script:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = `function doPost(e) {\\n  try {\\n    var data = JSON.parse(e.postData.contents);\\n    GmailApp.sendEmail(data.to, data.subject, "", {\\n      htmlBody: data.html,\\n      name: data.fromName || "RUFO Precise Detailing"\\n    });\\n    return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);\\n  } catch (err) {\\n    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);\\n  }\\n}`;
+                        navigator.clipboard.writeText(code);
+                        setCopiedScript(true);
+                        setTimeout(() => setCopiedScript(false), 3000);
+                      }}
+                      className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[11px] transition shadow"
+                    >
+                      {copiedScript ? '✅ ¡Código Copiado!' : '📋 Copiar Código del Script'}
+                    </button>
+                  </div>
+                  <ol className="list-decimal pl-4 space-y-1 text-gray-300">
+                    <li>Entra a <a href="https://script.google.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline font-bold">script.google.com</a> con tu cuenta juanbernate157@gmail.com y pulsa <strong>"Nuevo proyecto"</strong>.</li>
+                    <li>Borra el texto, haz clic en el botón <strong>"Copiar Código del Script"</strong> de arriba, pégalo allí y pulsa Guardar (Ctrl + S).</li>
+                    <li>Pulsa el botón azul <strong>"Implementar"</strong> (arriba a la derecha) &rarr; <strong>"Nueva implementación"</strong> &rarr; Selecciona <strong>"Aplicación web"</strong>.</li>
+                    <li>Configura: <em>Ejecutar como:</em> <strong>Yo</strong> • <em>Quién tiene acceso:</em> <strong>Cualquiera</strong> &rarr; Pulsa <strong>Implementar</strong>.</li>
+                    <li>Copia la URL que termina en <code>/exec</code>, pégala arriba y haz clic en <strong>Guardar Configuración</strong>.</li>
+                  </ol>
                 </div>
               </div>
 
-              {/* METODO 2: SMTP TRADICIONAL GMAIL */}
+              {/* OPCION 2: RESEND API (HTTPS) */}
+              <div className="p-4 bg-gradient-to-r from-blue-950/50 via-slate-900/60 to-blue-950/50 border border-blue-500/40 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400" />
+                    <h5 className="font-extrabold text-white text-sm">
+                      Opción 2: Resend API (Tu clave de resend.com)
+                    </h5>
+                  </div>
+                  <span className="text-[10px] font-bold text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                    3,000 correos/mes gratis
+                  </span>
+                </div>
+                <p className="text-xs text-gray-300">
+                  Si creaste tu clave en <a href="https://resend.com" target="_blank" rel="noreferrer" className="text-cyan-400 underline">resend.com</a> (la que empieza por <code>re_...</code>), pégala aquí:
+                </p>
+                <div>
+                  <input
+                    type="password"
+                    placeholder="re_FwPo9zPi..."
+                    value={settings.resend_api_key || ''}
+                    onChange={(e) => setSettings({ ...settings, resend_api_key: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-blue-500/40 text-white font-mono text-xs focus:ring-2 focus:ring-blue-400 focus:outline-none"
+                  />
+                  <p className="text-[11px] text-gray-400 mt-1">
+                    * Nota: En el modo gratuito de prueba de Resend entrega correos al correo del creador (juanbernate157@gmail.com). Para clientes externos requiere verificar un dominio propio en Resend o usar la Opción 1.
+                  </p>
+                </div>
+              </div>
+
+              {/* OPCION 3: BREVO API */}
+              <div className="p-4 bg-gradient-to-r from-slate-900/60 to-blue-950/40 border border-blue-900/40 rounded-2xl space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h5 className="font-extrabold text-gray-200 text-xs uppercase tracking-wider">
+                    Opción 3: Brevo API (Sendinblue • 300 correos/día a cualquier bandeja)
+                  </h5>
+                  <span className="text-[10px] text-gray-400">api.brevo.com</span>
+                </div>
+                <input
+                  type="password"
+                  placeholder="xkeysib-..."
+                  value={settings.brevo_api_key || ''}
+                  onChange={(e) => setSettings({ ...settings, brevo_api_key: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-blue-900/50 text-white font-mono text-xs"
+                />
+              </div>
+
+              {/* OPCION 4: SMTP TRADICIONAL GMAIL */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
                   <h5 className="font-bold text-gray-300 text-xs uppercase tracking-wider">
-                    Método 2: Servidor SMTP Clásico (Gmail)
+                    Opción 4: Servidor SMTP Clásico (Gmail)
                   </h5>
                   <label className="inline-flex items-center gap-2 cursor-pointer bg-blue-950/60 px-3 py-1 rounded-xl border border-blue-500/40">
                     <input
@@ -2293,84 +2388,62 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                   </label>
                 </div>
 
-              {/* Quick Gmail Preset Button */}
-              <div className="p-3 bg-blue-950/40 border border-blue-500/30 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-                <div className="text-gray-300">
-                  <strong className="text-cyan-300">¿Usas Gmail (como {settings.contact_email || 'juanbernate157@gmail.com'})?</strong>
-                  <p className="text-[11px] text-gray-400 mt-0.5">Rellena automáticamente los datos para enviar desde tu cuenta de Gmail.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                  <div>
+                    <label className="block font-bold text-gray-300 mb-1">Host SMTP</label>
+                    <input
+                      type="text"
+                      placeholder="smtp.gmail.com"
+                      value={settings.smtp_host || ''}
+                      onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-300 mb-1">Puerto SMTP</label>
+                    <input
+                      type="number"
+                      placeholder="465 (SSL) o 587"
+                      value={settings.smtp_port || 587}
+                      onChange={(e) => setSettings({ ...settings, smtp_port: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                    />
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSettings({
-                      ...settings,
-                      smtp_host: 'smtp.gmail.com',
-                      smtp_port: 465,
-                      smtp_secure: 1,
-                      smtp_user: settings.admin_notification_email || settings.contact_email || 'juanbernate157@gmail.com',
-                      smtp_from: `RUFO Precise Detailing <${settings.admin_notification_email || settings.contact_email || 'juanbernate157@gmail.com'}>`,
-                      smtp_enabled: 1,
-                    });
-                  }}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs whitespace-nowrap transition shadow-md"
-                >
-                  Autocompletar con Gmail
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div>
-                  <label className="block font-bold text-gray-300 mb-1">Host SMTP</label>
-                  <input
-                    type="text"
-                    placeholder="smtp.gmail.com"
-                    value={settings.smtp_host || ''}
-                    onChange={(e) => setSettings({ ...settings, smtp_host: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-300 mb-1">Puerto SMTP</label>
-                  <input
-                    type="number"
-                    placeholder="465 (SSL) o 587"
-                    value={settings.smtp_port || 587}
-                    onChange={(e) => setSettings({ ...settings, smtp_port: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                <div>
-                  <label className="block font-bold text-gray-300 mb-1">Usuario / Correo Remitente</label>
-                  <input
-                    type="text"
-                    placeholder="tucorreo@gmail.com"
-                    value={settings.smtp_user || ''}
-                    onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-300 mb-1">Contraseña de Aplicación (Google App Password)</label>
-                  <input
-                    type="password"
-                    placeholder="Contraseña de 16 caracteres de Google"
-                    value={settings.smtp_pass || ''}
-                    onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+                  <div>
+                    <label className="block font-bold text-gray-300 mb-1">Usuario / Correo Remitente</label>
+                    <input
+                      type="text"
+                      placeholder="tucorreo@gmail.com"
+                      value={settings.smtp_user || ''}
+                      onChange={(e) => setSettings({ ...settings, smtp_user: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-gray-300 mb-1">Contraseña de Aplicación de Google</label>
+                    <input
+                      type="password"
+                      placeholder="Contraseña de 16 caracteres"
+                      value={settings.smtp_pass || ''}
+                      onChange={(e) => setSettings({ ...settings, smtp_pass: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="p-3 bg-gray-900/80 rounded-xl border border-gray-800 text-[11px] text-gray-400 space-y-1">
-                <span className="font-bold text-cyan-300 block">💡 ¿Cómo obtener tu Contraseña de Aplicación de Gmail?</span>
-                <p>1. Ve a tu Cuenta de Google &rarr; Seguridad &rarr; Verificación en 2 pasos.</p>
-                <p>2. Abajo entra a <strong>"Contraseñas de aplicaciones"</strong> y crea una para "Correo" o "App Web".</p>
-                <p>3. Pega los 16 caracteres aquí y pulsa "Guardar Configuración". A partir de ese momento, todos los correos llegarán directamente a las bandejas reales.</p>
+              {/* REENVÍO AUTOMÁTICO EN GMAIL CALLOUT */}
+              <div className="p-3.5 bg-blue-950/40 rounded-2xl border border-blue-500/30 text-[11px] text-gray-300 space-y-1">
+                <span className="font-extrabold text-cyan-300 block text-xs">
+                  📬 ¿Cómo hacer que todas las notificaciones de tu Gmail también le caigan automáticamente al administrador ({settings.contact_email || 'ru88foramirez@hotmail.com'})?
+                </span>
+                <p>
+                  En tu pantalla abierta de Gmail (<strong>Configuración &rarr; Reenvío y correo POP/IMAP</strong>): escribe <code>{settings.contact_email || 'ru88foramirez@hotmail.com'}</code> en la casilla de reenvío, pídele el código de confirmación de 9 dígitos que le enviará Google a su Hotmail por única vez, confírmalo y selecciona <em>"Reenviar una copia del correo entrante"</em>. ¡Listo!
+                </p>
               </div>
-            </div>
 
             {/* Botón para probar el envío en vivo */}
             <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-blue-900/40">
