@@ -93,6 +93,28 @@ export default function App() {
 
   useEffect(() => {
     fetchData();
+
+    // Actualización automática al volver a la pestaña o ventana
+    const handleFocus = () => {
+      fetchData();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Sondeo periódico cada 8 segundos para sincronizar cambios de precios u horarios al instante
+    const intervalId = setInterval(fetchData, 8000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Filtered services
@@ -127,6 +149,7 @@ export default function App() {
           onExitAdmin={() => {
             window.location.hash = '';
             setCurrentView('public');
+            fetchData();
           }}
           onOpenShare={() => setShowShareModal(true)}
           onViewMyBooking={() => {}}
@@ -139,6 +162,7 @@ export default function App() {
             if (newSettings) setSettings(newSettings);
             fetchData();
           }}
+          onServicesSaved={fetchData}
           onExit={() => {
             window.location.hash = '';
             setCurrentView('public');

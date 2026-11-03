@@ -72,7 +72,7 @@ export default function Hero({ settings, searchTerm, setSearchTerm, selectedCate
             <div className="text-left">
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Horario de Atención</p>
               <p className="text-sm font-bold text-gray-200">
-                {settings?.opening_time || '08:00'} - {settings?.closing_time || '19:00'}
+                {settings?.business_hours_text || `${settings?.opening_time || '08:00'} - ${settings?.closing_time || '18:00'}`}
               </p>
             </div>
           </div>

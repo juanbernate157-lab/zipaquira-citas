@@ -3,7 +3,23 @@ import { X, Calendar, Clock, CheckCircle2, AlertCircle, ArrowLeft, ArrowRight, U
 import confetti from 'canvas-confetti';
 
 export default function BookingModal({ service, settings, onClose, onBookingSuccess }) {
+  const [currentService, setCurrentService] = useState(service);
   const [step, setStep] = useState(1); // 1: Date & Time, 2: Client Info, 3: Success
+
+  // Siempre obtener el precio y duración actualizados directamente de la base de datos
+  useEffect(() => {
+    if (service?.id) {
+      setCurrentService(service);
+      fetch(`/api/services/${service.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.id) {
+            setCurrentService(data);
+          }
+        })
+        .catch((err) => console.error('Error obteniendo servicio actualizado:', err));
+    }
+  }, [service]);
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
     return today.toISOString().slice(0, 10);
@@ -35,7 +51,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
     setSlotError('');
     setSelectedTime('');
 
-    fetch(`/api/appointments/available-slots?date=${selectedDate}&duration=${service.duration_minutes || 30}`)
+    fetch(`/api/appointments/available-slots?date=${selectedDate}&duration=${currentService.duration_minutes || 30}`)
       .then((res) => res.json())
       .then((data) => {
         setLoadingSlots(false);
@@ -50,7 +66,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
         setLoadingSlots(false);
         setSlotError('Error cargando los horarios disponibles. Intenta de nuevo.');
       });
-  }, [selectedDate, service]);
+  }, [selectedDate, currentService]);
 
   // Handle booking form submission
   const handleSubmitBooking = async (e) => {
@@ -68,7 +84,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          service_id: service.id,
+          service_id: currentService.id,
           appointment_date: selectedDate,
           appointment_time: selectedTime,
           client_name: clientName,
@@ -143,7 +159,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
 
   const currencySymbol = settings?.currency_symbol || '$';
   const currencyCode = settings?.currency_code || 'COP';
-  const priceFormatted = `${currencySymbol} ${Number(service.price).toLocaleString()} ${currencyCode}`;
+  const priceFormatted = `${currencySymbol} ${Number(currentService.price).toLocaleString()} ${currencyCode}`;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in text-gray-900">
@@ -162,7 +178,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
               </span>
             </div>
             <h2 className="text-xl font-black text-white mt-1 line-clamp-1">
-              {service.name}
+              {currentService.name}
             </h2>
           </div>
           <button
@@ -177,7 +193,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
         <div className="bg-blue-50 border-b border-blue-100 px-6 py-3 flex items-center justify-between text-xs sm:text-sm font-bold text-blue-950">
           <span className="flex items-center gap-1.5 text-blue-900">
             <Clock className="w-4 h-4 text-blue-600" />
-            Duración: {service.duration_minutes} min
+            Duración: {currentService.duration_minutes} min
           </span>
           <span className="text-blue-700 font-black text-base">
             {priceFormatted}
@@ -379,7 +395,7 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
               {/* Summary Pill */}
               <div className="bg-blue-50 p-3.5 rounded-2xl border border-blue-200 text-xs sm:text-sm text-blue-950 flex items-center justify-between font-bold">
                 <div>
-                  <span className="block text-gray-900">{service.name}</span>
+                  <span className="block text-gray-900">{currentService.name}</span>
                   <span className="text-blue-700">{selectedDate} a las {selectedTime}</span>
                 </div>
                 <button

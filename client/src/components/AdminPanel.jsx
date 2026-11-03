@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSettingsSaved }) {
+export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSettingsSaved, onServicesSaved }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [usernameInput, setUsernameInput] = useState('pedrito');
   const [passwordInput, setPasswordInput] = useState('');
@@ -198,6 +198,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       const res = await fetch(`/api/schedules/slots/${slotId}/toggle`, { method: 'PUT' });
       if (res.ok) {
         fetchSchedulesOverview();
+        if (onServicesSaved) onServicesSaved();
         setScheduleMsg({ type: 'success', text: 'Estado del turno actualizado exitosamente' });
         setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
       }
@@ -212,6 +213,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       const res = await fetch(`/api/schedules/slots/${slotId}`, { method: 'DELETE' });
       if (res.ok) {
         fetchSchedulesOverview();
+        if (onServicesSaved) onServicesSaved();
         setScheduleMsg({ type: 'success', text: 'Horario eliminado correctamente' });
         setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
       }
@@ -235,6 +237,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       const data = await res.json();
       if (res.ok) {
         fetchSchedulesOverview();
+        if (onServicesSaved) onServicesSaved();
         setScheduleMsg({ type: 'success', text: `Turno ${newSlotTime} agregado exitosamente a la agenda.` });
         setTimeout(() => setScheduleMsg({ type: '', text: '' }), 3000);
       } else {
@@ -243,6 +246,34 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       }
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleGenerateSlotsFromHours = async () => {
+    try {
+      setLoadingSchedules(true);
+      const res = await fetch('/api/schedules/generate-from-hours', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          opening_time: settings.opening_time || '08:00',
+          closing_time: settings.closing_time || '18:00',
+          interval: Number(settings.slot_interval_minutes) || 60,
+        }),
+      });
+      const data = await res.json();
+      setLoadingSchedules(false);
+      if (res.ok) {
+        fetchSchedulesOverview();
+        if (onServicesSaved) onServicesSaved();
+        setScheduleMsg({ type: 'success', text: data.message || 'Turnos sincronizados con éxito' });
+        setTimeout(() => setScheduleMsg({ type: '', text: '' }), 4000);
+      } else {
+        setScheduleMsg({ type: 'error', text: data.error || 'Error sincronizando turnos' });
+      }
+    } catch (e) {
+      setLoadingSchedules(false);
+      setScheduleMsg({ type: 'error', text: 'Error al conectar con el servidor' });
     }
   };
 
@@ -369,6 +400,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
         setShowServiceModal(false);
         setEditingService(null);
         fetchServices();
+        if (onServicesSaved) onServicesSaved();
       } else {
         const d = await res.json();
         alert('Error: ' + (d.error || 'No se pudo guardar el servicio'));
@@ -382,7 +414,10 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     if (!window.confirm('¿Estás seguro de eliminar este servicio?')) return;
     try {
       const res = await fetch(`/api/services/${id}`, { method: 'DELETE' });
-      if (res.ok) fetchServices();
+      if (res.ok) {
+        fetchServices();
+        if (onServicesSaved) onServicesSaved();
+      }
     } catch (e) {
       console.error(e);
     }
@@ -406,6 +441,8 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       if (res.ok) {
         setSettingsSuccess('¡Configuración de RUFO Precise Detailing guardada exitosamente!');
         if (onSettingsSaved) onSettingsSaved(data.settings);
+        if (onServicesSaved) onServicesSaved();
+        fetchSchedulesOverview();
         setTimeout(() => setSettingsSuccess(''), 4000);
       } else {
         setSettingsError(data.error || 'Error al guardar la configuración');
@@ -1736,7 +1773,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
             {/* PARTE 1: MODIFICAR HORARIOS DE SERVICIOS (TURNOS MAESTROS) */}
             <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-6">
-              <div className="flex items-center justify-between border-b border-blue-900/40 pb-3">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-blue-900/40 pb-3 gap-3">
                 <div>
                   <h4 className="font-extrabold text-white text-base flex items-center gap-2">
                     <span>1. Turnos de Atención del Negocio (Horarios Recurrentes)</span>
@@ -1748,6 +1785,17 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     Activa, pausa o agrega nuevos horarios en los que RUFO Precise Detailing recibe vehículos.
                   </p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateSlotsFromHours}
+                  disabled={loadingSchedules}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
+                  title="Genera turnos automáticos cada intervalo entre la hora de apertura y cierre configurada"
+                >
+                  <Zap className="w-3.5 h-3.5 text-yellow-300" />
+                  <span>⚡ Sincronizar con Horario ({settings?.opening_time || '08:00'} - {settings?.closing_time || '18:00'})</span>
+                </button>
               </div>
 
               {/* Grid de Turnos Actuales */}

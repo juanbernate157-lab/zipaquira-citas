@@ -143,6 +143,45 @@ router.put('/', (req, res) => {
     }
 
     const updated = getSettings();
+
+    // Sincronizar automáticamente los turnos de atención si se actualizan apertura, cierre o intervalo
+    if (updates.opening_time || updates.closing_time || updates.slot_interval_minutes) {
+      try {
+        const openTime = updates.opening_time || updated.opening_time || '08:00';
+        const closeTime = updates.closing_time || updated.closing_time || '18:00';
+        const interval = Number(updates.slot_interval_minutes || updated.slot_interval_minutes) || 60;
+
+        const [openH, openM] = openTime.split(':').map(Number);
+        const [closeH, closeM] = closeTime.split(':').map(Number);
+        const startMin = openH * 60 + openM;
+        const endMin = closeH * 60 + closeM;
+
+        if (startMin < endMin) {
+          for (let m = startMin; m < endMin; m += interval) {
+            const h = Math.floor(m / 60);
+            const min = m % 60;
+            const timeStr = `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+            let h12 = h % 12;
+            if (h12 === 0) h12 = 12;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const label = `${h12.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${ampm}`;
+            const isMorning = h < 12;
+            const period = isMorning ? 'morning' : 'afternoon';
+            const periodLabel = isMorning ? 'Mañana' : 'Tarde';
+
+            const existing = db.prepare('SELECT id FROM schedule_slots WHERE time_slot = ?').get(timeStr);
+            if (!existing) {
+              db.prepare('INSERT INTO schedule_slots (time_slot, label, period, period_label, is_active) VALUES (?, ?, ?, ?, 1)')
+                .run(timeStr, label, period, periodLabel);
+            } else {
+              db.prepare('UPDATE schedule_slots SET is_active = 1 WHERE id = ?').run(existing.id);
+            }
+          }
+        }
+      } catch (errSync) {
+        console.error('Error sincronizando turnos con horario:', errSync);
+      }
+    }
     res.json({
       success: true,
       message: 'Configuración actualizada con éxito',

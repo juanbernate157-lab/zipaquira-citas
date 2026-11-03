@@ -181,21 +181,29 @@ function initDb() {
     // ignore
   }
 
-  // Seed default schedule slots if empty
+  // Seed default schedule slots (8:00 AM to 6:00 PM) if slots are fewer than 5
   const slotCount = db.prepare('SELECT COUNT(*) as count FROM schedule_slots').get();
-  if (!slotCount || slotCount.count === 0) {
+  if (!slotCount || slotCount.count < 5) {
     const defaultSlots = [
       { time_slot: '08:00', label: '08:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
       { time_slot: '09:00', label: '09:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
+      { time_slot: '10:00', label: '10:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
+      { time_slot: '11:00', label: '11:00 AM', period: 'morning', period_label: 'Mañana', is_active: 1 },
+      { time_slot: '12:00', label: '12:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
+      { time_slot: '13:00', label: '01:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
       { time_slot: '14:00', label: '02:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
       { time_slot: '15:00', label: '03:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
+      { time_slot: '16:00', label: '04:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
+      { time_slot: '17:00', label: '05:00 PM', period: 'afternoon', period_label: 'Tarde', is_active: 1 },
     ];
-    const insertSlot = db.prepare(`
-      INSERT INTO schedule_slots (time_slot, label, period, period_label, is_active)
-      VALUES (?, ?, ?, ?, ?)
-    `);
     for (const s of defaultSlots) {
-      insertSlot.run(s.time_slot, s.label, s.period, s.period_label, s.is_active);
+      const existing = db.prepare('SELECT id FROM schedule_slots WHERE time_slot = ?').get(s.time_slot);
+      if (!existing) {
+        db.prepare(`
+          INSERT INTO schedule_slots (time_slot, label, period, period_label, is_active)
+          VALUES (?, ?, ?, ?, ?)
+        `).run(s.time_slot, s.label, s.period, s.period_label, s.is_active);
+      }
     }
   }
 

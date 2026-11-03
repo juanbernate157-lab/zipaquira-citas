@@ -1,22 +1,23 @@
 const { getSettings } = require('./db');
 
-// Format clean, emoji-safe text for WhatsApp notification
+// Format clean, emoji-safe text for WhatsApp notification matching exact brand template
 function formatWhatsAppBookingMessage(appointment, settings, baseUrl) {
   const duration = appointment.service_duration || 60;
   const siteUrl = baseUrl || 'https://zipaquira-citas.onrender.com';
 
   const lines = [
-    `*NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING*`,
-    `• Codigo de Cita: ${appointment.code}`,
-    `• Cliente: ${appointment.client_name}`,
-    `• Telefono Cliente: ${appointment.client_phone}`,
-    `• Servicio: ${appointment.service_name}`,
-    `• Fecha: ${appointment.appointment_date}`,
-    `• Hora: ${appointment.appointment_time} (${duration} min)`,
+    `❖ *¡NUEVA CITA AGENDADA EN RUFO PRECISE DETAILING!* ❖`,
+    ``,
+    `❖ *Código de Cita:* ${appointment.code}`,
+    `❖ *Cliente:* ${appointment.client_name}`,
+    `❖ *Teléfono Cliente:* ${appointment.client_phone}`,
+    `❖ *Servicio:* ${appointment.service_name}`,
+    `❖ *Fecha:* ${appointment.appointment_date}`,
+    `❖ *Hora:* ${appointment.appointment_time} (${duration} min)`,
   ];
 
   if (appointment.client_notes && appointment.client_notes.trim()) {
-    lines.push(`• Notas: ${appointment.client_notes.trim()}`);
+    lines.push(`❖ *Notas:* ${appointment.client_notes.trim()}`);
   }
 
   lines.push('');

@@ -25,6 +25,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Ensure all API responses are never cached by browser so changes in admin panel show up instantly
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // API Routes
 app.use('/api/services', servicesRouter);
 app.use('/api/appointments', appointmentsRouter);

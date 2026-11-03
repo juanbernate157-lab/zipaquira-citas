@@ -123,6 +123,50 @@ router.delete('/slots/:id', (req, res) => {
   }
 });
 
+// POST generate / synchronize slots from opening and closing hours
+router.post('/generate-from-hours', (req, res) => {
+  try {
+    const settings = getSettings();
+    const openTime = req.body.opening_time || settings.opening_time || '08:00';
+    const closeTime = req.body.closing_time || settings.closing_time || '18:00';
+    const interval = Number(req.body.interval || settings.slot_interval_minutes) || 60;
+
+    const [openH, openM] = openTime.split(':').map(Number);
+    const [closeH, closeM] = closeTime.split(':').map(Number);
+    const startMin = openH * 60 + openM;
+    const endMin = closeH * 60 + closeM;
+
+    if (startMin >= endMin) {
+      return res.status(400).json({ error: 'La hora de cierre debe ser posterior a la de apertura' });
+    }
+
+    const inserted = [];
+    for (let m = startMin; m < endMin; m += interval) {
+      const h = Math.floor(m / 60);
+      const min = m % 60;
+      const timeStr = `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+      const label = formatSlotLabel(timeStr);
+      const isMorning = h < 12;
+      const period = isMorning ? 'morning' : 'afternoon';
+      const periodLabel = isMorning ? 'Mañana' : 'Tarde';
+
+      const existing = db.prepare('SELECT id FROM schedule_slots WHERE time_slot = ?').get(timeStr);
+      if (!existing) {
+        db.prepare('INSERT INTO schedule_slots (time_slot, label, period, period_label, is_active) VALUES (?, ?, ?, ?, 1)')
+          .run(timeStr, label, period, periodLabel);
+      } else {
+        db.prepare('UPDATE schedule_slots SET is_active = 1 WHERE id = ?').run(existing.id);
+      }
+      inserted.push(timeStr);
+    }
+
+    const slots = db.prepare('SELECT * FROM schedule_slots ORDER BY time_slot ASC').all();
+    res.json({ success: true, message: `Se sincronizaron ${inserted.length} turnos entre ${openTime} y ${closeTime}`, slots });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET blocked / cancelled slots
 router.get('/blocked', (req, res) => {
   try {
