@@ -314,7 +314,7 @@ export default function App() {
               <h4 className="font-black text-white uppercase tracking-wider text-[11px] pt-3">Horario de Atención</h4>
               <p className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span className="text-gray-200">{settings?.business_hours_text || '8:00 AM - 9:00 AM • 2:00 PM - 3:00 PM'}</span>
+                <span className="text-gray-200">{settings?.business_hours_text || 'Lunes a Sábado: 8:00 AM - 6:00 PM'}</span>
               </p>
             </div>
 

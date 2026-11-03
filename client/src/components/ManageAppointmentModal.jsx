@@ -364,7 +364,7 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
                   </label>
                   <input
                     type="date"
-                    min={new Date().toISOString().slice(0, 10)}
+                    min={new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}
                     value={newDate}
                     onChange={(e) => setNewDate(e.target.value)}
                     style={{ color: '#0f172a', backgroundColor: '#ffffff' }}
@@ -378,7 +378,7 @@ export default function ManageAppointmentModal({ initialCode = '', initialAction
                       Nuevo Horario Disponible
                     </label>
                     <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                      Turnos RUFO (8-9 AM y 2-3 PM)
+                      Turnos RUFO Precise Detailing
                     </span>
                   </div>
                   {loadingSlots ? (
