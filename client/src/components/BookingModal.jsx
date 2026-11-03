@@ -20,9 +20,18 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
         .catch((err) => console.error('Error obteniendo servicio actualizado:', err));
     }
   }, [service]);
+  // Formateador exacto de fecha en zona horaria de Colombia (America/Bogota)
+  const formatColombiaDate = (date) => {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(date);
+  };
+
   const [selectedDate, setSelectedDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().slice(0, 10);
+    return formatColombiaDate(new Date());
   });
   const [selectedTime, setSelectedTime] = useState('');
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -139,15 +148,15 @@ export default function BookingModal({ service, settings, onClose, onBookingSucc
     }
   };
 
-  // Quick dates (Today, Tomorrow, Day after)
+  // Quick dates (Today, Tomorrow, Day after) en hora de Colombia
   const getQuickDates = () => {
     const dates = [];
     const labels = ['Hoy', 'Mañana', 'Pasado mañana'];
+    const now = new Date();
     for (let i = 0; i < 5; i++) {
-      const d = new Date();
-      d.setDate(d.getDate() + i);
-      const iso = d.toISOString().slice(0, 10);
-      const dayName = d.toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' });
+      const d = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+      const iso = formatColombiaDate(d);
+      const dayName = d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'short', day: 'numeric', month: 'short' });
       dates.push({
         iso,
         label: i < 3 ? labels[i] : dayName,

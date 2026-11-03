@@ -180,8 +180,12 @@ router.get('/available-slots', (req, res) => {
 
     const slots = [];
     const now = new Date();
-    const isToday = now.toISOString().slice(0, 10) === date;
-    const currentMinutesNow = now.getHours() * 60 + now.getMinutes();
+    const colDateFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const colTimeFormatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', hour12: false });
+    const todayColombia = colDateFormatter.format(now);
+    const [nowH, nowM] = colTimeFormatter.format(now).split(':').map(Number);
+    const currentMinutesNow = nowH * 60 + nowM;
+    const isToday = todayColombia === date;
 
     for (const slotDef of masterSlots) {
       const timeStr = slotDef.time;
