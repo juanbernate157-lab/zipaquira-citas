@@ -11,7 +11,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSettingsSaved, onServicesSaved }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [usernameInput, setUsernameInput] = useState('pedrito');
+  const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [loginError, setLoginError] = useState('');
@@ -600,9 +600,6 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                       className="w-full pl-11 pr-4 py-3 rounded-full bg-white/5 border border-blue-500/30 text-white placeholder-gray-500 text-xs sm:text-sm focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition"
                     />
                   </div>
-                  <p className="text-[11px] text-gray-500 mt-1 pl-4">
-                    * Usuario: <strong className="text-cyan-400 font-mono">pedrito</strong> • Contraseña: <strong className="text-cyan-400 font-mono">pedrito777</strong>
-                  </p>
                 </div>
 
                 {/* Remember Me Checkbox (as in image #2) */}
