@@ -70,9 +70,10 @@ export default function App() {
   // Fetch initial data
   const fetchData = async () => {
     try {
+      const ts = Date.now();
       const [resSettings, resServices] = await Promise.all([
-        fetch('/api/settings'),
-        fetch('/api/services'),
+        fetch(`/api/settings?t=${ts}`, { cache: 'no-store' }),
+        fetch(`/api/services?t=${ts}`, { cache: 'no-store' }),
       ]);
 
       const dataSettings = await resSettings.json();
@@ -396,7 +397,7 @@ export default function App() {
       {/* MODALS */}
       {bookingService && (
         <BookingModal
-          service={bookingService}
+          service={services.find((s) => s.id === bookingService.id) || bookingService}
           settings={settings}
           onClose={() => setBookingService(null)}
           onBookingSuccess={() => fetchData()}

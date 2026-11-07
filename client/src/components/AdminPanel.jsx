@@ -37,6 +37,15 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
   const [loadingServices, setLoadingServices] = useState(true);
   const [editingService, setEditingService] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
+  const [serviceMsg, setServiceMsg] = useState('');
+  const [savingPriceId, setSavingPriceId] = useState(null);
+
+  const parseColombianPrice = (raw) => {
+    if (raw === undefined || raw === null || raw === '') return 0;
+    if (typeof raw === 'number') return isNaN(raw) ? 0 : Math.round(raw);
+    const digits = String(raw).replace(/[^0-9]/g, '');
+    return digits ? Number(digits) : 0;
+  };
 
   // Settings / CMS state
   const [settings, setSettings] = useState({});
@@ -159,7 +168,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
   const fetchServices = () => {
     setLoadingServices(true);
-    fetch('/api/services?all=true')
+    fetch(`/api/services?all=true&t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         setServices(Array.isArray(data) ? data : []);
@@ -169,7 +178,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
   };
 
   const fetchAdminSettings = () => {
-    fetch('/api/settings/admin')
+    fetch(`/api/settings/admin?t=${Date.now()}`, { cache: 'no-store' })
       .then((res) => res.json())
       .then((data) => {
         setSettings(data || {});
@@ -383,11 +392,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       finalImg = `https://zipaquira-citas.onrender.com${finalImg.startsWith('/') ? '' : '/'}${finalImg || 'rufo-logo.png'}`;
     }
 
+    const cleanPrice = parseColombianPrice(editingService.price);
+
     const payload = {
       ...editingService,
       image_url: finalImg,
-      price: Number(editingService.price) || 0,
-      duration_minutes: Number(editingService.duration_minutes) || 30,
+      price: cleanPrice,
+      duration_minutes: Number(editingService.duration_minutes) || 60,
     };
 
     try {
@@ -399,14 +410,46 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
       if (res.ok) {
         setShowServiceModal(false);
         setEditingService(null);
+        setServiceMsg(`✅ ¡Servicio "${payload.name}" guardado con precio $${cleanPrice.toLocaleString('es-CO')} y actualizado para todos los clientes!`);
         fetchServices();
         if (onServicesSaved) onServicesSaved();
+        setTimeout(() => setServiceMsg(''), 5000);
       } else {
         const d = await res.json();
         alert('Error: ' + (d.error || 'No se pudo guardar el servicio'));
       }
     } catch (e) {
       alert('Error de conexión');
+    }
+  };
+
+  const handleQuickPriceSave = async (s) => {
+    setSavingPriceId(s.id);
+    setServiceMsg('');
+    try {
+      const cleanPrice = parseColombianPrice(s.price);
+      const cleanDuration = Number(s.duration_minutes) || 60;
+      const res = await fetch(`/api/services/${s.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...s,
+          price: cleanPrice,
+          duration_minutes: cleanDuration,
+        }),
+      });
+      setSavingPriceId(null);
+      if (res.ok) {
+        setServiceMsg(`✅ ¡Precio de "${s.name}" actualizado a $${cleanPrice.toLocaleString('es-CO')} en la página de clientes!`);
+        fetchServices();
+        if (onServicesSaved) onServicesSaved();
+        setTimeout(() => setServiceMsg(''), 5000);
+      } else {
+        alert('No se pudo actualizar el precio.');
+      }
+    } catch (e) {
+      setSavingPriceId(null);
+      alert('Error de conexión al guardar el precio.');
     }
   };
 
@@ -423,7 +466,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     }
   };
 
-  // Save Settings
+  // Save Settings (and also bulk-save any service price changes made in Control Total)
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     setSavingSettings(true);
@@ -431,19 +474,33 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
     setSettingsError('');
 
     try {
-      const res = await fetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
+      const cleanedServices = services.map((s) => ({
+        ...s,
+        price: parseColombianPrice(s.price),
+        duration_minutes: Number(s.duration_minutes) || 60,
+      }));
+
+      const [res, resServicesBulk] = await Promise.all([
+        fetch('/api/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        }),
+        fetch('/api/services/bulk/update', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ services: cleanedServices }),
+        }),
+      ]);
       const data = await res.json();
       setSavingSettings(false);
-      if (res.ok) {
-        setSettingsSuccess('¡Configuración de RUFO Precise Detailing guardada exitosamente!');
+      if (res.ok && resServicesBulk.ok) {
+        setSettingsSuccess('¡Precios, horarios y configuración de RUFO Precise Detailing guardados y actualizados en la página de usuarios!');
+        fetchServices();
         if (onSettingsSaved) onSettingsSaved(data.settings);
         if (onServicesSaved) onServicesSaved();
         fetchSchedulesOverview();
-        setTimeout(() => setSettingsSuccess(''), 4000);
+        setTimeout(() => setSettingsSuccess(''), 5000);
       } else {
         setSettingsError(data.error || 'Error al guardar la configuración');
       }
@@ -1534,7 +1591,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     category: 'General',
                     description: '',
                     price: 45000,
-                    duration_minutes: 30,
+                    duration_minutes: 60,
                     badge: '',
                     image_url: 'https://zipaquira-citas.onrender.com/rufo-logo.png',
                     is_active: 1,
@@ -1547,6 +1604,13 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                 <span>Nuevo Servicio</span>
               </button>
             </div>
+
+            {serviceMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs sm:text-sm font-black flex items-center gap-2 shadow-lg">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                <span>{serviceMsg}</span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {services.map((s) => (
@@ -1563,46 +1627,93 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                     )}
                   </div>
 
-                  <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                     <div>
                       <h4 className="font-black text-white text-base">{s.name}</h4>
                       <p className="text-xs text-gray-400 line-clamp-2 mt-1">{s.description}</p>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-blue-900/40 flex items-center justify-between">
-                      <div>
-                        <span className="text-[11px] text-gray-500 block uppercase font-bold">Precio & Duración</span>
-                        <span className="text-base font-black text-cyan-300">
-                          ${Number(s.price).toLocaleString()} • {s.duration_minutes} min
+                    {/* Editor Rápido de Precio y Duración */}
+                    <div className="p-3.5 rounded-2xl bg-black/40 border border-blue-800/50 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black uppercase text-cyan-400">💰 Cambiar Precio Rápido</span>
+                        <span className="text-xs font-black text-emerald-400">
+                          Actual: ${parseColombianPrice(s.price).toLocaleString('es-CO')}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => {
-                            let cleanUrl = (s.image_url || '').trim();
-                            if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-                              cleanUrl = `https://zipaquira-citas.onrender.com${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl || 'rufo-logo.png'}`;
-                            }
-                            setEditingService({
-                              ...s,
-                              image_url: cleanUrl,
-                            });
-                            setShowServiceModal(true);
-                          }}
-                          className="p-2 rounded-xl border border-blue-900/50 hover:bg-blue-950/60 text-cyan-300 transition"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteService(s.id)}
-                          className="p-2 rounded-xl border border-red-900/50 hover:bg-red-950/60 text-red-400 transition"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-gray-400 font-bold block mb-1">Nuevo Precio ($ COP)</label>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={s.price === 0 || s.price === '' ? '' : s.price}
+                            onChange={(e) => {
+                              const rawVal = e.target.value.replace(/[^0-9.]/g, '');
+                              setServices((prev) =>
+                                prev.map((item) => (item.id === s.id ? { ...item, price: rawVal } : item))
+                              );
+                            }}
+                            placeholder="Ej: 80000"
+                            className="w-full px-3 py-1.5 rounded-xl bg-[#050711] border border-cyan-500/50 text-white font-black text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 font-bold block mb-1">Duración (min)</label>
+                          <input
+                            type="number"
+                            step="5"
+                            value={s.duration_minutes}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setServices((prev) =>
+                                prev.map((item) => (item.id === s.id ? { ...item, duration_minutes: val } : item))
+                              );
+                            }}
+                            className="w-full px-3 py-1.5 rounded-xl bg-[#050711] border border-blue-900/60 text-white font-bold text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleQuickPriceSave(s)}
+                        disabled={savingPriceId === s.id}
+                        className="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-black font-black text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Save className="w-3.5 h-3.5 text-black" />
+                        <span>{savingPriceId === s.id ? 'Guardando...' : 'Guardar Precio Ahora'}</span>
+                      </button>
+                    </div>
+
+                    <div className="pt-2 border-t border-blue-900/40 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => {
+                          let cleanUrl = (s.image_url || '').trim();
+                          if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                            cleanUrl = `https://zipaquira-citas.onrender.com${cleanUrl.startsWith('/') ? '' : '/'}${cleanUrl || 'rufo-logo.png'}`;
+                          }
+                          setEditingService({
+                            ...s,
+                            price: parseColombianPrice(s.price),
+                            image_url: cleanUrl,
+                          });
+                          setShowServiceModal(true);
+                        }}
+                        className="flex-1 py-2 px-3 rounded-xl border border-blue-800/60 hover:bg-blue-950/60 text-cyan-300 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        title="Editar todos los detalles del servicio"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Editar Todo</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteService(s.id)}
+                        className="p-2 rounded-xl border border-red-900/50 hover:bg-red-950/60 text-red-400 transition cursor-pointer"
+                        title="Eliminar"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1662,14 +1773,19 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-bold text-gray-300 mb-1">Precio ($) *</label>
+                        <label className="block font-bold text-gray-300 mb-1">Precio ($ COP) *</label>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="numeric"
                           required
-                          value={editingService.price}
-                          onChange={(e) => setEditingService({ ...editingService, price: Number(e.target.value) })}
-                          className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
+                          placeholder="Ej: 80000 o 80.000"
+                          value={editingService.price === 0 || editingService.price === '' ? '' : editingService.price}
+                          onChange={(e) => setEditingService({ ...editingService, price: e.target.value.replace(/[^0-9.]/g, '') })}
+                          className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-cyan-500/60 text-white font-black text-sm"
                         />
+                        <span className="text-[10px] text-emerald-400 font-bold mt-1 block">
+                          Se mostrará: ${parseColombianPrice(editingService.price).toLocaleString('es-CO')} COP
+                        </span>
                       </div>
                       <div>
                         <label className="block font-bold text-gray-300 mb-1">Duración (Minutos) *</label>
@@ -1678,7 +1794,7 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                           required
                           step="5"
                           value={editingService.duration_minutes}
-                          onChange={(e) => setEditingService({ ...editingService, duration_minutes: Number(e.target.value) })}
+                          onChange={(e) => setEditingService({ ...editingService, duration_minutes: e.target.value })}
                           className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-blue-900/50 text-white text-sm"
                         />
                       </div>
@@ -2091,6 +2207,68 @@ export default function AdminPanel({ onOpenShare, onOpenEmailLogs, onExit, onSet
                 <span>{settingsSuccess}</span>
               </div>
             )}
+
+            {/* Precios de los Servicios Directo en Control Total */}
+            <div className="bg-[#0a0f22] p-6 rounded-3xl border-2 border-cyan-500/40 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-blue-900/40 pb-2 gap-2">
+                <div>
+                  <h4 className="font-extrabold text-white text-base flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                    <span>Precios y Duración de los Servicios (Vista de Usuarios)</span>
+                  </h4>
+                  <p className="text-xs text-gray-400">
+                    Cambia aquí directamente el valor de cualquier servicio. Puedes escribir <strong className="text-cyan-300">80000</strong> o <strong className="text-cyan-300">80.000</strong> y presionar <strong>Guardar Cambios</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {services.map((s) => (
+                  <div key={s.id} className="p-4 rounded-2xl bg-black/40 border border-blue-900/50 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-white text-sm">{s.name}</span>
+                      <span className="text-xs font-black text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+                        Cliente ve: ${parseColombianPrice(s.price).toLocaleString('es-CO')}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div>
+                        <label className="block font-bold text-gray-300 mb-1">Precio ($ COP)</label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={s.price === 0 || s.price === '' ? '' : s.price}
+                          onChange={(e) => {
+                            const rawVal = e.target.value.replace(/[^0-9.]/g, '');
+                            setServices((prev) =>
+                              prev.map((item) => (item.id === s.id ? { ...item, price: rawVal } : item))
+                            );
+                          }}
+                          placeholder="Ej: 80000"
+                          className="w-full px-3 py-2 rounded-xl bg-[#050711] border border-cyan-500/50 text-white font-black text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-gray-300 mb-1">Duración (Minutos)</label>
+                        <input
+                          type="number"
+                          step="5"
+                          value={s.duration_minutes}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setServices((prev) =>
+                              prev.map((item) => (item.id === s.id ? { ...item, duration_minutes: val } : item))
+                            );
+                          }}
+                          className="w-full px-3 py-2 rounded-xl bg-[#050711] border border-blue-900/50 text-white font-bold text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* General Branding */}
             <div className="bg-[#0a0f22] p-6 rounded-3xl border border-blue-900/40 shadow-xl space-y-4">

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const QRCode = require('qrcode');
 const { db, getSettings, updateSettings } = require('../db');
+const { backupToCloud } = require('../cloudSync');
 
 function formatImageUrl(req, url) {
   const fallback = 'https://zipaquira-citas.onrender.com/rufo-logo.png';
@@ -182,6 +183,7 @@ router.put('/', (req, res) => {
         console.error('Error sincronizando turnos con horario:', errSync);
       }
     }
+    backupToCloud().catch(() => {});
     res.json({
       success: true,
       message: 'Configuración actualizada con éxito',

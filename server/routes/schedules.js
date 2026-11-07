@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db, getSettings } = require('../db');
+const { backupToCloud } = require('../cloudSync');
 
 // Helper to format time_slot (HH:MM) to readable label
 function formatSlotLabel(timeStr) {
@@ -87,6 +88,7 @@ router.post('/slots', (req, res) => {
     const result = stmt.run(formattedTime, formattedLabel, finalPeriod, finalPeriodLabel);
 
     const newSlot = db.prepare('SELECT * FROM schedule_slots WHERE id = ?').get(result.lastInsertRowid);
+    backupToCloud().catch(() => {});
     res.status(201).json(newSlot);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -106,6 +108,7 @@ router.put('/slots/:id/toggle', (req, res) => {
     db.prepare('UPDATE schedule_slots SET is_active = ? WHERE id = ?').run(newStatus, id);
 
     const updated = db.prepare('SELECT * FROM schedule_slots WHERE id = ?').get(id);
+    backupToCloud().catch(() => {});
     res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -117,6 +120,7 @@ router.delete('/slots/:id', (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM schedule_slots WHERE id = ?').run(id);
+    backupToCloud().catch(() => {});
     res.json({ success: true, message: 'Horario eliminado correctamente' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -161,6 +165,7 @@ router.post('/generate-from-hours', (req, res) => {
     }
 
     const slots = db.prepare('SELECT * FROM schedule_slots ORDER BY time_slot ASC').all();
+    backupToCloud().catch(() => {});
     res.json({ success: true, message: `Se sincronizaron ${inserted.length} turnos entre ${openTime} y ${closeTime}`, slots });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -207,6 +212,7 @@ router.post('/blocked', (req, res) => {
     const result = stmt.run(block_date, finalSlot, finalReason);
 
     const newBlocked = db.prepare('SELECT * FROM blocked_slots WHERE id = ?').get(result.lastInsertRowid);
+    backupToCloud().catch(() => {});
     res.status(201).json(newBlocked);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -218,6 +224,7 @@ router.delete('/blocked/:id', (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM blocked_slots WHERE id = ?').run(id);
+    backupToCloud().catch(() => {});
     res.json({ success: true, message: 'Horario desbloqueado y rehabilitado para reservas' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -234,6 +241,7 @@ router.put('/working-days', (req, res) => {
 
     const jsonStr = JSON.stringify(working_days);
     db.prepare('UPDATE settings SET working_days = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1').run(jsonStr);
+    backupToCloud().catch(() => {});
 
     res.json({ success: true, working_days });
   } catch (err) {

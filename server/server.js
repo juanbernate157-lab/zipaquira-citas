@@ -10,6 +10,7 @@ if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
 }
 const { startScheduler } = require('./schedulerService');
+const { restoreFromCloud } = require('./cloudSync');
 
 const servicesRouter = require('./routes/services');
 const appointmentsRouter = require('./routes/appointments');
@@ -25,8 +26,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Restore latest prices, schedules, settings & appointments from cloud KV on startup
+const cloudRestorePromise = restoreFromCloud().catch((err) => {
+  console.error('⚠️ Error en restoreFromCloud inicial:', err.message);
+});
+
 // Ensure all API responses are never cached by browser so changes in admin panel show up instantly
-app.use('/api', (req, res, next) => {
+app.use('/api', async (req, res, next) => {
+  if (req.path !== '/health') {
+    await cloudRestorePromise;
+  }
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   res.set('Pragma', 'no-cache');
   res.set('Expires', '0');
@@ -96,6 +105,7 @@ app.use((req, res, next) => {
   }
   const indexPath = path.join(clientDistPath, 'index.html');
   if (fs.existsSync(indexPath)) {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     return res.sendFile(indexPath);
   }
   res.status(200).send(`

@@ -56,6 +56,8 @@ function startScheduler(baseUrl) {
   // Check every 60 seconds
   schedulerInterval = setInterval(() => {
     checkUpcomingAppointments(baseUrl);
+    // Keep-Alive ping to prevent Render free tier spin-down
+    fetch('https://zipaquira-citas.onrender.com/api/health').catch(() => {});
   }, 60 * 1000);
 }
 

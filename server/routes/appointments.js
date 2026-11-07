@@ -3,6 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const os = require('os');
 const { db, getSettings } = require('../db');
+const { backupToCloud } = require('../cloudSync');
 const {
   sendClientBookingConfirmation,
   sendAdminNewBookingNotification,
@@ -429,7 +430,8 @@ router.post('/', async (req, res) => {
     const waText = formatWhatsAppBookingMessage(newAppointment, settings, baseUrl);
     const adminWhatsappUrl = `https://wa.me/${adminPhone}?text=${encodeURIComponent(waText)}`;
 
-    // Send notifications in background (Automated WhatsApp direct to Admin + Emails)
+    // Send notifications in background (Automated WhatsApp direct to Admin + Emails + CloudBackup)
+    backupToCloud().catch(() => {});
     Promise.allSettled([
       sendAdminWhatsAppNotification(newAppointment, baseUrl),
       sendAdminNewBookingNotification(newAppointment, baseUrl),
@@ -529,6 +531,7 @@ router.put('/:code/reschedule', async (req, res) => {
 
     const updatedApp = db.prepare('SELECT * FROM appointments WHERE id = ?').get(app.id);
     const baseUrl = getBaseUrl(req);
+    backupToCloud().catch(() => {});
 
     // Send notification emails
     sendRescheduleNotification(updatedApp, oldDate, oldTime, baseUrl).catch(err => {
@@ -568,6 +571,7 @@ router.put('/:code/cancel', async (req, res) => {
 
     const updatedApp = db.prepare('SELECT * FROM appointments WHERE id = ?').get(app.id);
     const baseUrl = getBaseUrl(req);
+    backupToCloud().catch(() => {});
 
     // Send cancellation notifications
     sendCancellationNotification(updatedApp, reason, baseUrl).catch(err => {
@@ -597,6 +601,7 @@ router.put('/:id/status', (req, res) => {
 
     db.prepare('UPDATE appointments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, app.id);
     const updated = db.prepare('SELECT * FROM appointments WHERE id = ?').get(app.id);
+    backupToCloud().catch(() => {});
     res.json(updated);
   } catch (error) {
     res.status(500).json({ error: error.message });

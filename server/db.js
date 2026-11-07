@@ -162,7 +162,7 @@ function initDb() {
     // Column already exists
   }
 
-  // Ensure all image and logo URLs are complete absolute HTTPS URLs
+  // Ensure relative image URLs have absolute fallback if needed
   try {
     db.exec(`
       UPDATE services 
@@ -170,11 +170,8 @@ function initDb() {
       WHERE image_url LIKE '/%' OR image_url = '' OR image_url IS NULL;
 
       UPDATE settings 
-      SET logo_url = 'https://zipaquira-citas.onrender.com/rufo-logo.png',
-          admin_notification_email = 'ru88foramirez@hotmail.com, juanbernate157@gmail.com',
-          contact_email = 'ru88foramirez@hotmail.com',
-          admin_username = 'pedrito',
-          admin_password = 'pedrito777'
+      SET admin_username = COALESCE(NULLIF(admin_username, ''), 'pedrito'),
+          admin_password = COALESCE(NULLIF(admin_password, ''), 'pedrito777')
       WHERE id = 1;
     `);
   } catch (e) {
@@ -211,22 +208,8 @@ function initDb() {
   const countRow = db.prepare('SELECT COUNT(*) as count FROM settings').get();
   if (!countRow || countRow.count === 0) {
     db.prepare(`
-      INSERT INTO settings (id, business_name, hero_title, hero_subtitle, tagline, logo_url, primary_color, accent_color, admin_notification_email, address, city)
-      VALUES (1, 'RUFO Precise Detailing', 'Reserva tu cita', 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.', 'Each Precise Detail Counts', '/rufo-logo.png', '#2563eb', '#3b82f6', 'juanbernate157@gmail.com', 'Calle 5 # 10-25', 'Zipaquirá, Colombia')
-    `).run();
-  } else {
-    // Update existing row to user requested branding
-    db.prepare(`
-      UPDATE settings 
-      SET business_name = 'RUFO Precise Detailing',
-          hero_title = 'Reserva tu cita',
-          hero_subtitle = 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.',
-          tagline = 'Each Precise Detail Counts',
-          logo_url = '/rufo-logo.png',
-          primary_color = '#2563eb',
-          accent_color = '#3b82f6',
-          city = 'Zipaquirá, Colombia'
-      WHERE id = 1
+      INSERT INTO settings (id, business_name, hero_title, hero_subtitle, tagline, logo_url, primary_color, accent_color, admin_notification_email, address, city, admin_username, admin_password)
+      VALUES (1, 'RUFO Precise Detailing', 'Reserva tu cita', 'Cuidado automotriz de alta gama, detailing profesional y lavado premium.', 'Each Precise Detail Counts', 'https://zipaquira-citas.onrender.com/rufo-logo.png', '#2563eb', '#3b82f6', 'ru88foramirez@hotmail.com, juanbernate157@gmail.com', 'Calle 5 # 10-25', 'Zipaquirá, Colombia', 'pedrito', 'pedrito777')
     `).run();
   }
 
